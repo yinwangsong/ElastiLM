@@ -1,0 +1,12 @@
+[submodule "mllm/android"]
+	path = mllm/android
+	url = https://github.com/lx200916/ChatBotApp
+[submodule "mllm/third_party/pybind11"]
+	path = mllm/third_party/pybind11
+	url = https://github.com/pybind/pybind11.git
+[submodule "mllm/src/backends/xnnpack/third_party/XNNPACK"]
+	path = mllm/src/backends/xnnpack/third_party/XNNPACK
+	url = https://github.com/google/XNNPACK.git
+[submodule "mllm/third_party/googletest"]
+	path = mllm/third_party/googletest
+	url = https://github.com/google/googletest.git
