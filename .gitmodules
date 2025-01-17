@@ -1,0 +1,9 @@
+[submodule "deployment/mllm/third_party/googletest"]
+	path = deployment/mllm/third_party/googletest
+	url = https://github.com/google/googletest.git
+[submodule "deployment/mllm/third_party/pybind11"]
+	path = deployment/mllm/third_party/pybind11
+	url = https://github.com/pybind/pybind11.git
+[submodule "deployment/mllm/third_party/XNNPACK"]
+	path = deployment/mllm/third_party/XNNPACK
+	url = https://github.com/google/XNNPACK.git
