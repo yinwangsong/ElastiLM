@@ -7,3 +7,6 @@
 [submodule "deployment/mllm/third_party/XNNPACK"]
 	path = deployment/mllm/third_party/XNNPACK
 	url = https://github.com/google/XNNPACK.git
+[submodule "deployment/mllm/android"]
+	path = deployment/mllm/android
+	url = https://github.com/lx200916/ChatBotApp
