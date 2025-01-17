@@ -33,8 +33,13 @@ ErrorCode mat_mul(Tensor *src0, Tensor *src1, Tensor *dst, bool support_bias, Te
 
     auto src1_type_size = type_size(src1_dtype);
     auto src1_blck_size = blck_size(src1_dtype);
+
+    // std::cout<<src1_type_size<<" "<<src1_blck_size<<std::endl;
+
     auto src0_type_size = type_size(src0->dtype());
     auto src0_blck_size = blck_size(src0->dtype());
+
+    // std::cout<<src0_type_size<<" "<<src0_blck_size<<std::endl;
 
 #ifdef LLAMAFILE_SGEMM
     int ld_src1 = src1->sequenceSkipDim();

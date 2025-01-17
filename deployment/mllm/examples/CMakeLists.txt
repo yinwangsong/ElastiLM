@@ -72,6 +72,7 @@ func_llm_add_executable(demo_smollm)
 func_llm_add_executable(demo_openelm)
 func_llm_add_executable(demo_dclm)
 func_llm_add_executable(demo_bert)
+func_llm_add_executable(demo_mobilebert)
 func_llm_add_executable(demo_phonelm)
 # func_llm_add_executable(demo_minicpm_moe_mbm)
 

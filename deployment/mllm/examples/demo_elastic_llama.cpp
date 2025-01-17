@@ -7,13 +7,16 @@
 #include "models/llama/modeling_elastic_llama.hpp"
 #include "models/llama/tokenization_llama.hpp"
 #include "processor/PostProcess.hpp"
+#include "memory/MemInspect.hpp"
+
 
 using namespace mllm;
 
 int main(int argc, char **argv) {
     cmdline::parser cmdParser;
     cmdParser.add<string>("vocab", 'v', "specify mllm tokenizer model path", false, "../vocab/llama2_vocab.mllm");
-    cmdParser.add<string>("model", 'm', "specify mllm model path", false, "../models/llama-2-7b-chat-q4_0_4_4.mllm");
+    cmdParser.add<string>("model", 'm', "specify mllm model path", false, "../models/llama-2-7b-chat-fp16.mllm");
+    // cmdParser.add<string>("model", 'm', "specify mllm model path", false, "../models/llama-2-7b-chat-q4_0_4_4.mllm");
     cmdParser.add<int>("limits", 'l', "max KV cache size", false, 400);
     cmdParser.add<int>("thread", 't', "num of threads", false, 4);
     cmdParser.parse_check(argc, argv);
@@ -25,9 +28,12 @@ int main(int argc, char **argv) {
 
     auto tokenizer = LLaMATokenizer(vocab_path);
 
-    LLaMAConfig config(tokens_limit, "7B", LLAMAROPE);
+    LLaMAConfig config(tokens_limit, "7B", HFHUBROPE);
+    // LLaMAConfig config(tokens_limit, "7B", LLAMAROPE);
     auto model = ElasticLLaMAModel(config);
     model.load(model_path);
+
+    printf("\nMemory Usage: %ld MB(%ld)", physical_memory_used_by_process() / 1000, virtual_memory_used_by_process()/1000);
 
     vector<string> in_strs = {
         " Hello, who are you?",
@@ -75,12 +81,14 @@ int main(int argc, char **argv) {
                 {(int)(32 * ratio), (int)(11008 * ratio)}, // 30
                 {(int)(32 * ratio), (int)(11008 * ratio)}  // 31
             };
+            // input_tensor.printData0<float>();
             auto result = model({input_tensor}, activate_dims);
             auto [out_string, out_token] = tokenizer.detokenize(result[0]);
             auto [not_end, output_string] = tokenizer.postprocess(out_string);
             if (!not_end) { break; }
             std::cout << output_string << std::flush;
             chatPostProcessing(out_token, input_tensor, {});
+            // printf("\nMemory Usage: %ld MB(%ld)", physical_memory_used_by_process() / 1000, virtual_memory_used_by_process()/1000);
         }
         printf("\n");
         model.clear_kvcache();

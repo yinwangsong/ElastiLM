@@ -36,6 +36,7 @@ ErrorCode CPULinear::reshape(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
     // batch |out_channel | seq_len               |  1
     //       |out_features|  inputs[0]->sequence()  |
     assert(inputs[0]->head() == 1);
+    // std::cout<<in_features_<< " " << inputs[0]->dimension() << std::endl;
     assert(in_features_ == inputs[0]->dimension());
     outputs[0]->reshape(inputs[0]->batch(), inputs[0]->head(), inputs[0]->sequence(), out_features_);
     // outputs[0]->setDtype(activationDtype());
@@ -74,15 +75,18 @@ ErrorCode CPULinear::load(AbstructLoader &loader) {
 }
 
 ErrorCode CPULinear::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
+    // std::cout << name() << "  CPULinear  execute" << std::endl;
     //    auto start = mllm::mllm_time_us();
     if (inputs[0]->count() == 0) {
         return Op::execute(inputs, outputs);
     }
+    // std::cout<<"here!"<<std::endl;
     if (inputs[0]->sequence() != outputs[0]->sequence() && outputs[0]->masterTensor() == nullptr) {
         outputs[0]->reshape(outputs[0]->batch(), outputs[0]->head(), inputs[0]->sequence(), outputs[0]->dimension());
         // outputs[0]->reshape(inputs[0]->batch(), inputs[0]->head(), inputs[0]->sequence(), out_features_);
         outputs[0]->alloc();
     }
+    // std::cout<<"here1!"<<std::endl;
     // TODO: Q8_0 KVCache can not use!!
     if (outputs[0]->dtype() == MLLM_TYPE_Q8_0) {
         auto tmp_out = std::make_shared<Tensor>(outputs[0]->backend());
@@ -123,6 +127,10 @@ ErrorCode CPULinear::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
             }
         }
     } else {
+        // std::cout<<weight_.batch()<<" "<<weight_.head()<<" "<<weight_.sequence()<<" "<<weight_.dimension()<<std::endl;
+        // weight_.printData0<float>();
+        // std::cout<<inputs[0].get()->batch()<<" "<<inputs[0].get()->head()<<" "<<inputs[0].get()->sequence()<<" "<<inputs[0].get()->dimension()<<std::endl;
+        // inputs[0].get()->printData0<float>();
         mat_mul(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, false, true, thread_count);
     }
     // std::cout << name() << "  CPULinear()" << std::endl;
@@ -151,6 +159,8 @@ ErrorCode CPULinear::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
     */
     //    auto end = mllm::mllm_time_us();
     //    printf("exec time: %ld us\n", end - start);
+    // std::cout<<outputs[0].get()->batch()<<" "<<outputs[0].get()->head()<<" "<<outputs[0].get()->sequence()<<" "<<outputs[0].get()->dimension()<<std::endl;
+    // outputs[0].get()->printData0<float>();
     return Op::execute(inputs, outputs);
 }
 ErrorCode CPULinear::free(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {

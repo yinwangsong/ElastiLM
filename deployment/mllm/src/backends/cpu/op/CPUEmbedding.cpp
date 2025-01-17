@@ -33,6 +33,7 @@ ErrorCode CPUEmbedding::load(AbstructLoader &loader) {
         weight_.setDtype(MLLM_TYPE_F32);
         weight_.alloc();
     }
+    // std::cout<<weight_.dataAt<float>(0, 0, 1, 0)<<std::endl;
     return Op::load(loader);
 }
 ErrorCode CPUEmbedding::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {

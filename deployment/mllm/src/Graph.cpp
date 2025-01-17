@@ -68,6 +68,9 @@ Graph::Graph(const NetParameter &param, Backend *bn,
         op_names_.push_back(op_name);
         auto in_tensors = net_op->in;
         vector<shared_ptr<Tensor>> inTensors;
+
+        std::cout<<inTensors.size()<<std::endl;
+
         for (auto *in_t : in_tensors) {
             if (in_t->in == NULL) {
                 connect_input = true;

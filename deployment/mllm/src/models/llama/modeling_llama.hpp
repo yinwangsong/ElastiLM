@@ -82,16 +82,16 @@ public:
                const LLaMANameConfig &names, const string &base_name) {
         embedding = Embedding(vocab_size, hidden_dim, names.token_embd_name);
         blocks = List<LLaMABlock>(block_num, hidden_dim, head_size, kv_head_size, ffn_hidden, RoPE_type, rope_theta, max_position_embeddings, cache_limit, names, base_name);
-        norm = RMSNorm(hidden_dim, 1e-6, names.post_norm_name);
-        lm_head = Linear(hidden_dim, vocab_size, false, names.lm_head_name);
+        // norm = RMSNorm(hidden_dim, 1e-6, names.post_norm_name);
+        // lm_head = Linear(hidden_dim, vocab_size, false, names.lm_head_name);
     }
     vector<Tensor> Forward(vector<Tensor> inputs, vector<std::any> args) override {
         auto x = embedding(inputs[0]);
         for (auto &block : blocks) {
             x = block({x})[0];
         }
-        x = norm(x);
-        x = lm_head(x);
+        // x = norm(x);
+        // x = lm_head(x);
         return {x};
     }
 

@@ -169,11 +169,15 @@ public:
         Module::tmp_device = device_;
         // Module Loading
         if (llm_model_ptr && llm_model_ptr->doLoad) {
+            // std::cout<<"Module Loading"<<std::endl;
+            // std::cout<<inputs[0].name()<<std::endl;
             auto outputs = Forward(inputs, anyArgs);
             // for inner module, set output tensors to GRAPH_OUTPUT
             if (inputs[0].ttype() != TensorType::INPUT_TENSOR) { // XPUs' module should not be the outermost input tensor
                 for (auto &output : outputs) {
+                    // std::cout<<outputs.size()<<std::endl;
                     inputs[0].module()->activation_tensors[output.name()]->setTtype(GRAPH_OUTPUT);
+                    // std::cout<<output.name()<<std::endl;
                 }
             }
             // set Module::tmp_device to previous device
@@ -182,6 +186,7 @@ public:
         }
         // Module setUp & execute
         if (inputs[0].ttype() == TensorType::INPUT_TENSOR) {
+            // std::cout<<"Module setUp & execute"<<std::endl;
             if (prefilling_token_size_ == 0) { // first time init
                 prefilling_token_size_ = inputs[0].sequence();
             } else if (decoding_token_size_ == 0) {
@@ -191,6 +196,7 @@ public:
                 auto &input = inputs[i];
                 input.setName("input" + std::to_string(i));
                 input.setTtype(TensorType::NORMAL_TENSOR);
+                // std::cout<<input.name()<<std::endl;
                 activation_tensors[input.name()] = std::shared_ptr<Tensor>(&input, [](Tensor *) {});
                 activation_tensors[input.name()]->setName(input.name());
                 activation_tensors[input.name()]->setModule(this);
@@ -199,9 +205,11 @@ public:
             Tensor::tensor_status = TENSOR_STATIC_INIT;
 
             uint64_t time_start = mllm_time_us();
+            // std::cout<<"the first forward"<<std::endl;
             Forward(inputs, anyArgs);
             Tensor::tensor_status = TENSOR_STATIC_READY;
             // uint64_t time_start = mllm_time_us();
+            // std::cout<<"the second forward"<<std::endl;
             auto output = Forward(inputs, anyArgs);
             uint64_t time_end = mllm_time_us();
 
@@ -217,6 +225,8 @@ public:
         } else { // inner Modules
             // offload according to the backends' info inited during loading
             if (Tensor::tensor_status == TENSOR_STATIC_INIT && device_ != MLLM_CPU) { // backend specific module reshape & setup
+                // std::cout<<"the first forward--inner"<<std::endl;
+                
                 if (Module::isMultiChunkPrefilling && !Module::isFirstChunk) {        // set to TENSOR_UNDEFINED and SKIP executing qnn layers
                     Tensor::tensor_status = TENSOR_UNDEFINED;
                     auto outputs = Forward(inputs, anyArgs);
@@ -226,11 +236,13 @@ public:
                 auto inputs_vec = vector<shared_ptr<Tensor>>();
                 auto outputs_vec = vector<shared_ptr<Tensor>>();
                 for (auto &i : inputs) {
+                    // std::cout<<i.name()<<std::endl;
                     inputs_vec.push_back(inputs[0].module()->activation_tensors[i.name()]);
                 }
                 auto getUinqueName = [this]() -> string {
                     std::ostringstream oss;
                     oss << "Module@" << this;
+                    // std::cout<< "Module@" << this;
                     return oss.str();
                 };
                 Backend::global_backends[device_]->onSetUpStart(inputs_vec, outputs_vec, getUinqueName());
@@ -242,6 +254,7 @@ public:
 
                 auto outputs = Forward(inputs, anyArgs);
                 for (auto &output : outputs) {
+                    std::cout<<output.name()<<std::endl;
                     outputs_vec.push_back(inputs[0].module()->activation_tensors[output.name()]);
                 }
                 Backend::global_backends[device_]->onSetUpEnd(inputs_vec, outputs_vec, getUinqueName());
@@ -261,6 +274,7 @@ public:
                 auto getUinqueName = [this]() -> string {
                     std::ostringstream oss;
                     oss << "Module@" << this;
+                    // std::cout<< "Module@" << this;
                     return oss.str();
                 };
                 Backend::global_backends[device_]->onExecuteStart(inputs_vec, outputs_vec, getUinqueName());

@@ -8,6 +8,7 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <iostream>
 // TODO:
 /*
  * ┌───────┬──────┬───────┬────────┬───────────┬─────────┬─────────┬──────┬──────────────────────┬─────────────────────────┐
@@ -102,8 +103,8 @@ ParamLoader::ParamLoader(std::string filename, bool use_mmap) :
         uint64_t length = readu64(fp_);
         uint64_t offset = readu64(fp_);
         offsets_[name] = std::make_pair(offset, length);
-        // std::cout<<name<<"   length:"<<length<<std::endl;
         data_type_[name] = readInt(fp_);
+        // std::cout<<name<<"   length:"<<length<<"    offset:"<<offset<<"   "<<data_type_[name]<<std::endl;
     }
 // int len = sizeof(int);
 // while (len<size) {

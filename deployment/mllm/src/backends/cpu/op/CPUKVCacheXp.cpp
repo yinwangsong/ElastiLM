@@ -10,6 +10,8 @@ CPUKVCacheXp::CPUKVCacheXp(Backend *bn, const string &op_name, int n_rep, int ca
 }
 
 ErrorCode CPUKVCacheXp::reshape(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
+    // std::cout << name() << "  CPUKVCacheXp  reshape" << std::endl;
+    
     assert(inputs.size() == 1);
     assert(outputs.size() == 1);
 

@@ -817,6 +817,7 @@ public:
     Tensor &expand(int b, int h, int s, int d);
     static Tensor &cat(vector<Tensor> input_tensors, Chl dims);
     static Tensor &mm(Tensor &input0, Tensor &input1);
+    static Tensor &mobilebert_conv_embed(Tensor &input0);
     Tensor &norm(int L_n);
     Tensor &where(float value, Chl axis);
     static Tensor &range(int start, int end);
@@ -1322,6 +1323,12 @@ public:
                 std::cout << std::endl;
             }
         }
+    }
+
+
+    template <typename Dtype>
+    void printData0() {
+        std::cout << std::fixed << std::setprecision(7) << static_cast<float>(dataAt<Dtype>(0, 0, 0, 0)) << " " <<std::endl;
     }
 
     template <typename Dtype>

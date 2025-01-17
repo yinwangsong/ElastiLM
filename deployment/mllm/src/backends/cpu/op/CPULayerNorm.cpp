@@ -5,8 +5,9 @@
 #include "CPULayerNorm.hpp"
 
 namespace mllm {
-CPULayerNorm::CPULayerNorm(Backend *bn, string opName,int normSize,bool bias, float epsilon, int threadCount) : thread_count(threadCount),
-    Op(bn, std::move(opName)), epsilon_(epsilon),bias(bias) {
+CPULayerNorm::CPULayerNorm(Backend *bn, string opName, int normSize, bool bias, float epsilon, int threadCount) : thread_count(threadCount),
+    Op(bn, std::move(opName)), epsilon_(epsilon), bias(bias) {
+
     normSize_ = normSize;
     weight_.setBackend(bn);
     if (bias) {
@@ -47,12 +48,19 @@ ErrorCode CPULayerNorm::reshape(vector<shared_ptr<Tensor>> inputs, vector<shared
 }
 
 ErrorCode CPULayerNorm::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
+    // std::cout << name() << "  CPULayerNorm  execute" << std::endl;
     auto input = inputs[0];
     auto output = outputs[0];
     int batch = input->batch();
     int dim = input->dimension();
     int seq = input->sequence();
     int head = input->head();
+
+    // std::cout<<weight_.batch()<<" "<<weight_.head()<<" "<<weight_.sequence()<<" "<<weight_.dimension()<<std::endl;
+    // weight_.printData0<float>();
+    // std::cout<<inputs[0].get()->batch()<<" "<<inputs[0].get()->head()<<" "<<inputs[0].get()->sequence()<<" "<<inputs[0].get()->dimension()<<std::endl;
+    // inputs[0].get()->printData0<float>();
+
     for (int h = 0; h < head; h++) {
         for (int n = 0; n < batch; n++) {
             for (int s = 0; s < seq; s++) {

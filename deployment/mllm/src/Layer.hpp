@@ -145,6 +145,7 @@ private:
         }
     }
 
+
 protected:
     vector<std::reference_wrapper<Tensor>> run(vector<Tensor> inputs, int N = 1) {
         Module *module;
@@ -225,6 +226,7 @@ protected:
                     activation_tensors[next_name]->setName(next_name);
                     activation_tensors[next_name]->setModule(module);
                     activation_tensors_num[next_name] = 0;
+                    // std::cout<<"[layer end] "<<next_name<<std::endl;
                 }
             }
             if (module->doLoad) {
@@ -243,6 +245,7 @@ protected:
                 auto input_name = input.name();
                 if (param_["type"] == KVCACHE && do_init && use_layername_2_tensorname) {
                     input_name = name_X_to_num(input_name, saved_list_idx);
+                    std::cout<<"KV cache"<<input_name<<std::endl;
                 }
                 input_tensors.push_back(activation_tensors[input_name]);
             } else {
@@ -262,12 +265,14 @@ protected:
         for (const auto &layer_next_name : layer_next_names) {
             string next_name = use_layername_2_tensorname ? layername_2_tensorname[layer_next_name] : layer_next_name;
             output_tensors.push_back(activation_tensors[next_name]);
+            // std::cout<<layer_next_name<<" "<<next_name<<std::endl;
         }
 #ifdef DEBUGOPTIME
         auto start_t = mllm_time_us();
 #endif
         switch (Tensor::tensor_status) {
         case TENSOR_STATIC_INIT: {
+            // std::cout << "setUp" << std::endl;
             op_->reshape(input_tensors, output_tensors);
             op_->setUp(input_tensors, output_tensors);
             break;
@@ -285,11 +290,15 @@ protected:
                 if ((activation_tensors_num.find(input_tensor->name()) != activation_tensors_num.end())) {
                     switch (Tensor::tensor_status) {
                     case TENSOR_STATIC_INIT: {
+                        // std::cout << "init" << input_tensor->name() << std::endl;
                         activation_tensors_num[input_tensor->name()] += 1;
+                        // std::cout << input_tensor->name() << " |init" << std::endl;
                         break;
                     }
                     case TENSOR_STATIC_READY: {
+                        // std::cout << "ready" << input_tensor->name() << std::endl;
                         activation_tensors_num[input_tensor->name()] -= 1;
+                        // std::cout << input_tensor->name() << " |ready" << std::endl;
                         break;
                     }
                     default: {
@@ -297,7 +306,7 @@ protected:
                     }
                     if (activation_tensors_num[input_tensor->name()] == 0 && activation_tensors[input_tensor->name()]->sequence() > 1) {
                         activation_tensors[input_tensor->name()]->free();
-                        // std::cout << input_tensor->name() << "|" << std::endl;
+                        // std::cout << "layer buffers " << input_tensor->name() << "|" << std::endl;
                     }
                 }
             }
@@ -518,6 +527,18 @@ public:
     }
 };
 
+class MBBertConvEmbed final : public Layer {
+public:
+    MBBertConvEmbed() = default;
+    explicit MBBertConvEmbed(std::string name) {
+        init(std::move(name), OpType::MBBERTCONVEMBED);
+    }
+    Tensor &operator()(Tensor &input) {
+        auto ts = run({input}, 1);
+        return ts[0].get();
+    }
+};
+
 class Causalmask final : public Layer {
 public:
     Causalmask() = default;
@@ -661,6 +682,21 @@ public:
         return ts[0].get();
     }
 };
+
+class NoNorm final : public Layer {
+public:
+    explicit NoNorm(int norm_size, bool bias, std::string name) {
+        param_["norm_size"] = norm_size;
+        param_["bias"] = (float)bias;
+        // std::cout<<(float)bias<<std::endl;
+        init(std::move(name), OpType::NONORM);
+    }
+    Tensor &operator()(Tensor &input) {
+        auto ts = run({input}, 1);
+        return ts[0].get();
+    }
+};
+
 
 class RMSNorm final : public Layer {
 public:

@@ -5,6 +5,8 @@ from functools import reduce
 from io import BufferedWriter
 import os
 import torch
+import numpy as np
+
 
 MAGIC_NUMBER = 20012
 file_map = {}
@@ -57,6 +59,12 @@ class Writer:
 
     def write_float(self, val: float):
         self.writer.write(struct.pack("<f", val))
+
+    def write_float16(self, val: np.float16):
+        f16 = val
+        u16 = np.uint16(f16.view('H'))
+        packed_data = struct.pack("<H", u16)
+        self.writer.write(packed_data)
 
     def write_u64(self, val: int):
         self.writer.write(struct.pack("<Q", val))
@@ -228,7 +236,7 @@ if __name__ == "__main__":
     for key in model_keys:
         tensor = get_tensor(model, key, index_)
         key, tensor = process(key, tensor, args.model_type)
-        tensor = tensor.float()
+        # tensor = tensor.float()
         offset, size = writer.write_tensor(tensor, key)
         print(f"Get tensor {key} to {offset} with size {size}")
 

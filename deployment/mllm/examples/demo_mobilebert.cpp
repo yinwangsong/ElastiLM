@@ -1,9 +1,9 @@
 //
-// Created by xwk on 24-10-23.
+// Created by yws on 25-1-12.
 //
-#include "models/bert/configuration_bert.hpp"
-#include "models/bert/modeling_bert.hpp"
-#include "models/bert/tokenization_bert.hpp"
+#include "models/mobilebert/configuration_mobilebert.hpp"
+#include "models/mobilebert/modeling_mobilebert.hpp"
+#include "models/mobilebert/tokenization_mobilebert.hpp"
 #include "cmdline.h"
 #include <vector>
 
@@ -15,7 +15,7 @@
 
 int main(int argc, char *argv[]) {
     cmdline::parser cmdParser;
-    cmdParser.add<string>("model", 'm', "specify mllm model path", false, "../models/gte-small-fp32.mllm");
+    cmdParser.add<string>("model", 'm', "specify mllm model path", false, "../models/mobilebert-uncased-fp32.mllm");
     cmdParser.add<string>("vocab", 'v', "specify mllm tokenizer model path", false, "../vocab/gte_vocab.mllm");
     cmdParser.add<int>("thread", 't', "num of threads", false, 4);
     cmdParser.parse_check(argc, argv);
@@ -24,17 +24,17 @@ int main(int argc, char *argv[]) {
     string vocab_path = cmdParser.get<string>("vocab");
     CPUBackend::cpu_threads = cmdParser.get<int>("thread");
 
-    BertTokenizer tokenizer(vocab_path, true);
-    auto config = BertConfig();
-    auto model = BertModel(config);
+    MobileBertTokenizer tokenizer(vocab_path, true);
+    auto config = MobileBertConfig();
+    auto model = MobileBertModel(config);
     model.load(model_path);
+    // model.setNoLoadWeightsDtype(MLLM_TYPE_F32);
 
-    string text = "Help me set an alarm at 21:30";
+    string text = "hello what is your name?";
     vector<string> texts = {text, text};
     for (auto &text : texts) {
         auto inputs = tokenizer.tokenizes(text);
         auto res = model({inputs[0], inputs[1], inputs[2]})[0];
-        // res.printData<float>();
     }
 
     return 0;

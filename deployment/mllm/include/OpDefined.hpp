@@ -61,6 +61,8 @@ enum OpType {
     SPLITINPUT,
     IROPE,
     OP_NUM,
+    MBBERTCONVEMBED,
+    NONORM, // for mobilebert
 
     // add in xnnpack
     DIRECT,
@@ -129,6 +131,7 @@ static const vector<string> OpNames = {
     "SplitInput",
     "IRoPE",
     "OP_NUM",
+    "MBBertConvEmbed",
 
     // in xnnpack
     "Direct",
@@ -173,6 +176,7 @@ enum TensorFuncType {
     FUNC_REPEAT,
     FUNC_LIKE,
     FUNC_SCATTERREDUCE,
+    FUNC_MBBERTCONVEMBED,
     // models use only
     FUNC_FUYU_GATHER_EMBD,
     FUNC_PHI3V_HD_MERGE,

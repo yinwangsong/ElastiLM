@@ -158,6 +158,7 @@ Tensor &Tensor::to(BackendType backend_type) {
 // TensorFuctions
 Tensor &Tensor::getFunc(const std::string &suffix, const TensorFuncType type,
                         vector<float> float_args, vector<Tensor *> other_tensors) {
+    // std::cout<<"------start get func-------"<<suffix<<std::endl;
     assert(module() != nullptr);
     auto &module_tensors = module()->activation_tensors;
     auto &activation_tensors_num = module()->activation_tensors_num;
@@ -196,10 +197,12 @@ Tensor &Tensor::getFunc(const std::string &suffix, const TensorFuncType type,
                 switch (Tensor::tensor_status) {
                 case TENSOR_STATIC_INIT: {
                     activation_tensors_num[input_tensor->name()] += 1;
+                    // std::cout << input_tensor->name() << " |Finit" << std::endl;
                     break;
                 }
                 case TENSOR_STATIC_READY: {
                     activation_tensors_num[input_tensor->name()] -= 1;
+                    // std::cout << input_tensor->name() << " |Fready" << std::endl;
                     break;
                 }
                 default: {
@@ -208,6 +211,7 @@ Tensor &Tensor::getFunc(const std::string &suffix, const TensorFuncType type,
                 if (activation_tensors_num[input_tensor->name()] == 0 && module_tensors[input_tensor->name()]->sequence() > 1) {
                     module_tensors[input_tensor->name()]->free();
                     // std::cout << input_tensor->name() << " |F" << std::endl;
+                    // std::cout<<next_name<<std::endl;
                 }
             }
         }
@@ -222,11 +226,13 @@ Tensor &Tensor::getFunc(const std::string &suffix, const TensorFuncType type,
 #ifdef DEBUGSAVETENSOR
     module_tensors[next_name]->saveNData<float>();
 #endif
+    // std::cout<<"------end get func-------"<<suffix<<std::endl;
     return *module_tensors[next_name];
 }
 
 void Tensor::getFunc(const TensorFuncType type,
                      vector<float> float_args, vector<Tensor *> other_tensors) {
+    // std::cout<<"------start get func in place-------"<<std::endl;
     assert(module() != nullptr);
     auto &module_tensors = module()->activation_tensors;
     auto &activation_tensors_num = module()->activation_tensors_num;
@@ -257,6 +263,7 @@ void Tensor::getFunc(const TensorFuncType type,
                 switch (Tensor::tensor_status) {
                 case TENSOR_STATIC_INIT: {
                     activation_tensors_num[input_tensor->name()] += 1;
+                    // std::cout << input_tensor->name() << " |Finit" << std::endl;
                     break;
                 }
                 case TENSOR_STATIC_READY: {
@@ -280,6 +287,7 @@ void Tensor::getFunc(const TensorFuncType type,
                   << " time: " << (end_t - start_t) / 1000.0F << "ms" << std::endl;
     }
 #endif
+    // std::cout<<"------end get func in place-------"<<std::endl;
 }
 
 std::vector<std::reference_wrapper<Tensor>> Tensor::getStaticFunc(vector<std::string> out_names,
@@ -338,6 +346,7 @@ std::vector<std::reference_wrapper<Tensor>> Tensor::getStaticFunc(vector<std::st
                 switch (Tensor::tensor_status) {
                 case TENSOR_STATIC_INIT: {
                     activation_tensors_num[input_tensor->name()] += 1;
+                    // std::cout << input_tensor->name() << " |Sinit" << std::endl;
                     break;
                 }
                 case TENSOR_STATIC_READY: {
@@ -510,6 +519,17 @@ Tensor &Tensor::mm(Tensor &input0, Tensor &input1) {
                {nname}, FUNC_MM, {},
                {module->activation_tensors[input0.name()].get(), module->activation_tensors[input1.name()].get()})[0]
         .get();
+}
+
+Tensor &Tensor::mobilebert_conv_embed(Tensor &input0) {
+    Module *module = input0.module();
+    string nname = input0.name() + "-mobilebertconvembed";
+    if (nname.find(".X.") != string::npos)
+        nname = _name_num_to_X(nname);
+    return getStaticFunc(
+               {nname}, FUNC_MBBERTCONVEMBED, {},
+               {module->activation_tensors[input0.name()].get()}
+            )[0].get();
 }
 
 Tensor &Tensor::range(int start, int end) {

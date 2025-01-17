@@ -56,6 +56,9 @@
 #include "op/CPUIRoPE.hpp"
 #include "op/CPUPosition.hpp"
 
+#include "op/CPUMBBertCovEmbed.hpp"
+#include "op/CPUNoNorm.hpp"
+
 #include "op/CPUKVCacheNPU.hpp"
 #include "op/CPUKVCacheXp.hpp"
 
@@ -83,6 +86,8 @@
 
 #include "function/CPUFuyuGatherEmbdFunc.hpp"
 #include "function/CPUPhi3VhdmergeFunc.hpp"
+
+#include "function/CPUMobileBertConvEmbedFunc.hpp"
 
 namespace mllm {
 class CPUBackendCreator : public BackendCreator {
@@ -170,7 +175,10 @@ void CPUBackend::registerOps() {
     addCreator(SPLITINPUT, (CPUBackend::Creator *)(new CPUSplitInputCreator()));
     addCreator(LINEARINT8SHADOW, (CPUBackend::Creator *)(new CPULinearINT8ShadowCreator()));
     addCreator(IROPE, (CPUBackend::Creator *)(new CPUIRoPECreator()));
-    addCreator(XP_KVCACHE, (CPUBackend::Creator *)(new CPUKVCacheXpCreator()));
+    addCreator(XP_KVCACHE, (CPUBackend::Creator *)(new CPUMBBertCovEmbedCreator()));
+
+    addCreator(MBBERTCONVEMBED, (CPUBackend::Creator *)(new CPUMBBertCovEmbedCreator()));
+    addCreator(NONORM, (CPUBackend::Creator *)(new CPUNoNormCreator()));
 }
 TensorFunction *CPUBackend::funcCreate(const TensorFuncType type) {
     auto iter = map_function_.find(type);
@@ -213,6 +221,9 @@ void CPUBackend::registerFuncs() {
     map_function_[TensorFuncType::FUNC_REPEAT] = new CPUrepeatFunction();
     map_function_[TensorFuncType::FUNC_LIKE] = new CPUlikeFunction();
     map_function_[TensorFuncType::FUNC_SCATTERREDUCE] = new CPUScatterReduceFunction();
+
+    map_function_[TensorFuncType::FUNC_MBBERTCONVEMBED] = new CPUMobileBertConvEmbedFunc();
+
     // models use only
     map_function_[TensorFuncType::FUNC_FUYU_GATHER_EMBD] = new CPUFuyuGatherEmbdFunc();
     map_function_[TensorFuncType::FUNC_PHI3V_HD_MERGE] = new CPUPhi3VhdmergeFunction();
