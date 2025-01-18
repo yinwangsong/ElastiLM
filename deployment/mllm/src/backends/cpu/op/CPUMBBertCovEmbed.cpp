@@ -38,4 +38,3 @@ ErrorCode CPUMBBertCovEmbed::setUp(vector<shared_ptr<Tensor>> inputs, vector<sha
     return Op::setUp(inputs, outputs);
 }
 } // namespace mllm
-

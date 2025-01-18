@@ -61,6 +61,7 @@ enum OpType {
     SPLITINPUT,
     IROPE,
     OP_NUM,
+
     MBBERTCONVEMBED,
     NONORM, // for mobilebert
 
@@ -75,6 +76,10 @@ enum OpType {
 
     // new front-end
     SUPERSILU,
+    HEADLINEAR,
+
+
+
 };
 
 static const vector<string> OpNames = {
@@ -131,7 +136,9 @@ static const vector<string> OpNames = {
     "SplitInput",
     "IRoPE",
     "OP_NUM",
+
     "MBBertConvEmbed",
+    "NoNorm",
 
     // in xnnpack
     "Direct",
@@ -142,6 +149,7 @@ static const vector<string> OpNames = {
     "XP_KVCACHE",
     "SDPA",
     "SuperSiLU",
+    "HeadLinear",
 };
 
 enum TensorFuncType {
@@ -176,10 +184,12 @@ enum TensorFuncType {
     FUNC_REPEAT,
     FUNC_LIKE,
     FUNC_SCATTERREDUCE,
-    FUNC_MBBERTCONVEMBED,
     // models use only
     FUNC_FUYU_GATHER_EMBD,
     FUNC_PHI3V_HD_MERGE,
+
+    FUNC_MBBERTCONVEMBED,
+
 };
 
 } // namespace mllm

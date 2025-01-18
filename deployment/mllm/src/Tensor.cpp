@@ -158,7 +158,6 @@ Tensor &Tensor::to(BackendType backend_type) {
 // TensorFuctions
 Tensor &Tensor::getFunc(const std::string &suffix, const TensorFuncType type,
                         vector<float> float_args, vector<Tensor *> other_tensors) {
-    // std::cout<<"------start get func-------"<<suffix<<std::endl;
     assert(module() != nullptr);
     auto &module_tensors = module()->activation_tensors;
     auto &activation_tensors_num = module()->activation_tensors_num;
@@ -188,6 +187,12 @@ Tensor &Tensor::getFunc(const std::string &suffix, const TensorFuncType type,
         func->execute({module_tensors[next_name].get()}, tensorPtrs, float_args);
         break;
     }
+    case TENSOR_STATIC_TRACE: {
+        if (backend_->type() == BackendType::MLLM_CPU) {
+            Tracer::addTensorFunction(func, tensorPtrs, {module_tensors[next_name].get()}, float_args);
+        }
+        break;
+    }
     default: {
     }
     }
@@ -197,12 +202,10 @@ Tensor &Tensor::getFunc(const std::string &suffix, const TensorFuncType type,
                 switch (Tensor::tensor_status) {
                 case TENSOR_STATIC_INIT: {
                     activation_tensors_num[input_tensor->name()] += 1;
-                    // std::cout << input_tensor->name() << " |Finit" << std::endl;
                     break;
                 }
                 case TENSOR_STATIC_READY: {
                     activation_tensors_num[input_tensor->name()] -= 1;
-                    // std::cout << input_tensor->name() << " |Fready" << std::endl;
                     break;
                 }
                 default: {
@@ -211,7 +214,6 @@ Tensor &Tensor::getFunc(const std::string &suffix, const TensorFuncType type,
                 if (activation_tensors_num[input_tensor->name()] == 0 && module_tensors[input_tensor->name()]->sequence() > 1) {
                     module_tensors[input_tensor->name()]->free();
                     // std::cout << input_tensor->name() << " |F" << std::endl;
-                    // std::cout<<next_name<<std::endl;
                 }
             }
         }
@@ -226,13 +228,11 @@ Tensor &Tensor::getFunc(const std::string &suffix, const TensorFuncType type,
 #ifdef DEBUGSAVETENSOR
     module_tensors[next_name]->saveNData<float>();
 #endif
-    // std::cout<<"------end get func-------"<<suffix<<std::endl;
     return *module_tensors[next_name];
 }
 
 void Tensor::getFunc(const TensorFuncType type,
                      vector<float> float_args, vector<Tensor *> other_tensors) {
-    // std::cout<<"------start get func in place-------"<<std::endl;
     assert(module() != nullptr);
     auto &module_tensors = module()->activation_tensors;
     auto &activation_tensors_num = module()->activation_tensors_num;
@@ -263,7 +263,6 @@ void Tensor::getFunc(const TensorFuncType type,
                 switch (Tensor::tensor_status) {
                 case TENSOR_STATIC_INIT: {
                     activation_tensors_num[input_tensor->name()] += 1;
-                    // std::cout << input_tensor->name() << " |Finit" << std::endl;
                     break;
                 }
                 case TENSOR_STATIC_READY: {
@@ -287,7 +286,6 @@ void Tensor::getFunc(const TensorFuncType type,
                   << " time: " << (end_t - start_t) / 1000.0F << "ms" << std::endl;
     }
 #endif
-    // std::cout<<"------end get func in place-------"<<std::endl;
 }
 
 std::vector<std::reference_wrapper<Tensor>> Tensor::getStaticFunc(vector<std::string> out_names,
@@ -337,6 +335,12 @@ std::vector<std::reference_wrapper<Tensor>> Tensor::getStaticFunc(vector<std::st
         func->execute(outPtrs, input_tensors, float_args);
         break;
     }
+    case TENSOR_STATIC_TRACE: {
+        if (backend_h->type() == BackendType::MLLM_CPU) {
+            Tracer::addTensorFunction(func, input_tensors, outPtrs, float_args);
+        }
+        break;
+    }
     default: {
     }
     }
@@ -346,7 +350,6 @@ std::vector<std::reference_wrapper<Tensor>> Tensor::getStaticFunc(vector<std::st
                 switch (Tensor::tensor_status) {
                 case TENSOR_STATIC_INIT: {
                     activation_tensors_num[input_tensor->name()] += 1;
-                    // std::cout << input_tensor->name() << " |Sinit" << std::endl;
                     break;
                 }
                 case TENSOR_STATIC_READY: {

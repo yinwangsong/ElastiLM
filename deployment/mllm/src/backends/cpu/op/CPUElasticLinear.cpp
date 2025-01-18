@@ -61,11 +61,6 @@ ErrorCode CPUElasticLinear::load(AbstructLoader &loader) {
 }
 
 ErrorCode CPUElasticLinear::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
-
-    // std::cout<<weight_.name()<<" "<<weight_.dtype()<<std::endl;
-
-    // weight_.printData0<mllm_fp16_t>();
-
     int activate_input_dim = (int)inputs[1]->dataAt<float>(0, 0, 0, 0);
     int activate_output_dim = (int)inputs[2]->dataAt<float>(0, 0, 0, 0);
 
@@ -74,8 +69,6 @@ ErrorCode CPUElasticLinear::execute(vector<shared_ptr<Tensor>> inputs, vector<sh
         return Op::execute(inputs, outputs);
     }
     mat_mul_elastic(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, activate_input_dim, activate_output_dim, false, true, thread_count);
-    // inputs[0].get()->printData0<float>();
-    // outputs[0].get()->printData0<mllm_fp16_t>();
     /*
     // std::cout << name() << "  CPUElasticLinear()" << std::endl;
     switch (weight_.dtype()) {

@@ -5,8 +5,6 @@ from functools import reduce
 from io import BufferedWriter
 import os
 import torch
-import numpy as np
-
 
 MAGIC_NUMBER = 20012
 file_map = {}
@@ -59,12 +57,6 @@ class Writer:
 
     def write_float(self, val: float):
         self.writer.write(struct.pack("<f", val))
-
-    def write_float16(self, val: np.float16):
-        f16 = val
-        u16 = np.uint16(f16.view('H'))
-        packed_data = struct.pack("<H", u16)
-        self.writer.write(packed_data)
 
     def write_u64(self, val: int):
         self.writer.write(struct.pack("<Q", val))

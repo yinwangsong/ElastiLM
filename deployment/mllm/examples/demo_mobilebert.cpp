@@ -15,7 +15,7 @@
 
 int main(int argc, char *argv[]) {
     cmdline::parser cmdParser;
-    cmdParser.add<string>("model", 'm', "specify mllm model path", false, "../models/mobilebert-uncased-fp32.mllm");
+    cmdParser.add<string>("model", 'm', "specify mllm model path", false, "../models/mobilebert-uncased-fp16.mllm");
     cmdParser.add<string>("vocab", 'v', "specify mllm tokenizer model path", false, "../vocab/gte_vocab.mllm");
     cmdParser.add<int>("thread", 't', "num of threads", false, 4);
     cmdParser.parse_check(argc, argv);
@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
     for (auto &text : texts) {
         auto inputs = tokenizer.tokenizes(text);
         auto res = model({inputs[0], inputs[1], inputs[2]})[0];
+        res.printDataTorchLike<float>();
     }
 
     return 0;

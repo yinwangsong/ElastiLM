@@ -11,9 +11,6 @@ CPUMatmul::CPUMatmul(Backend *bn, string opName, bool transpose0, bool transpose
 }
 
 ErrorCode CPUMatmul::reshape(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
-
-    // std::cout<<"cpumatmul"<<std::endl;
-
     assert(inputs.size() == 2);
     assert(outputs.size() == 1);
     assert(inputs[0]->head() == inputs[1]->head());
@@ -64,7 +61,7 @@ ErrorCode CPUMatmul::reshape(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
 }
 
 ErrorCode CPUMatmul::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
-    // std::cout << name() << "  CPUMatmul  execute" << std::endl;
+
     assert(inputs[0]->dtype() == MLLM_TYPE_F32);
     mat_mul(inputs[0].get(), inputs[1].get(), outputs[0].get(), false, nullptr, transpose0_, transpose1_, thread_count);
     // assert(inputs[1]->dtype() == MLLM_TYPE_F32);
@@ -82,8 +79,6 @@ ErrorCode CPUMatmul::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
         break;
     }
     */
-    // std::cout<<outputs[0].get()->batch()<<" "<<outputs[0].get()->head()<<" "<<outputs[0].get()->sequence()<<" "<<outputs[0].get()->dimension()<<std::endl;
-    // outputs[0].get()->printData0<float>();
     return Op::execute(inputs, outputs);
 }
 

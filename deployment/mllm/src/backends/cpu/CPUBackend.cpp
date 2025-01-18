@@ -7,6 +7,7 @@
 #include "Types.hpp"
 #include "memory/SystemMemoryManager.hpp"
 
+#include "op/CPUHeadLinear.hpp"
 #include "op/CPULinearInt8.hpp"
 #include "op/CPUPoEmbedding.hpp"
 #include "op/CPUSplitInput.hpp"
@@ -84,10 +85,10 @@
 #include "function/CPULikeFunc.hpp"
 #include "function/CPUScatterReduceFunc.hpp"
 
+#include "function/CPUMobileBertConvEmbedFunc.hpp"
+
 #include "function/CPUFuyuGatherEmbdFunc.hpp"
 #include "function/CPUPhi3VhdmergeFunc.hpp"
-
-#include "function/CPUMobileBertConvEmbedFunc.hpp"
 
 namespace mllm {
 class CPUBackendCreator : public BackendCreator {
@@ -175,10 +176,12 @@ void CPUBackend::registerOps() {
     addCreator(SPLITINPUT, (CPUBackend::Creator *)(new CPUSplitInputCreator()));
     addCreator(LINEARINT8SHADOW, (CPUBackend::Creator *)(new CPULinearINT8ShadowCreator()));
     addCreator(IROPE, (CPUBackend::Creator *)(new CPUIRoPECreator()));
-    addCreator(XP_KVCACHE, (CPUBackend::Creator *)(new CPUMBBertCovEmbedCreator()));
+    addCreator(XP_KVCACHE, (CPUBackend::Creator *)(new CPUKVCacheXpCreator()));
+    addCreator(HEADLINEAR, (CPUBackend::Creator *)(new CPUHeadLinearCreator()));
 
     addCreator(MBBERTCONVEMBED, (CPUBackend::Creator *)(new CPUMBBertCovEmbedCreator()));
     addCreator(NONORM, (CPUBackend::Creator *)(new CPUNoNormCreator()));
+
 }
 TensorFunction *CPUBackend::funcCreate(const TensorFuncType type) {
     auto iter = map_function_.find(type);
@@ -221,12 +224,11 @@ void CPUBackend::registerFuncs() {
     map_function_[TensorFuncType::FUNC_REPEAT] = new CPUrepeatFunction();
     map_function_[TensorFuncType::FUNC_LIKE] = new CPUlikeFunction();
     map_function_[TensorFuncType::FUNC_SCATTERREDUCE] = new CPUScatterReduceFunction();
-
-    map_function_[TensorFuncType::FUNC_MBBERTCONVEMBED] = new CPUMobileBertConvEmbedFunc();
-
     // models use only
     map_function_[TensorFuncType::FUNC_FUYU_GATHER_EMBD] = new CPUFuyuGatherEmbdFunc();
     map_function_[TensorFuncType::FUNC_PHI3V_HD_MERGE] = new CPUPhi3VhdmergeFunction();
+
+    map_function_[TensorFuncType::FUNC_MBBERTCONVEMBED] = new CPUMobileBertConvEmbedFunc();
 };
 
 int CPUBackend::cpu_threads = 4;

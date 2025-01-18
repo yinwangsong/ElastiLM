@@ -19,7 +19,7 @@ public:
 
 private:
     int thread_count = 4;
-    float epsilon_ = 1e-12;
+    float epsilon_;
     int normSize_ = 0;
     Tensor weight_;
     Tensor bias_;

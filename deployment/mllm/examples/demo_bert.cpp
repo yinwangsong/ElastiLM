@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     for (auto &text : texts) {
         auto inputs = tokenizer.tokenizes(text);
         auto res = model({inputs[0], inputs[1], inputs[2]})[0];
-        // res.printData<float>();
+        res.printData<float>();
     }
 
     return 0;

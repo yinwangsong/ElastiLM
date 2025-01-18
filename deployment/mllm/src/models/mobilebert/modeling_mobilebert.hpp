@@ -356,7 +356,7 @@ public:
         embeddings = MobileBertEmbeddings(config, config.names_config.embedding_module);
         encoder = MobileBertEncoder(config, config.names_config.encoder_module);
         pooler = MobileBertPooler();
-        // head = MobileBertHead(config, config.names_config.head_module);
+        head = MobileBertHead(config, config.names_config.head_module);
     }
 
     std::vector<Tensor> Forward(std::vector<Tensor> inputs, std::vector<std::any> args) override {
