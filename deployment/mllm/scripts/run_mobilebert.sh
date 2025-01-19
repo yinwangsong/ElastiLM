@@ -13,4 +13,4 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 #adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./main_llama"
-adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./demo_mobilebert -m ../models/mobilebert-uncased-fp16.mllm"
+adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./demo_mobilebert -m ../models/mobilebert-uncased-fp16.mllm -t 1"

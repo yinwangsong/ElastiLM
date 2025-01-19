@@ -4,6 +4,7 @@
 #include "Op.hpp"
 #include "../CPUBackend.hpp"
 #include "../compute/Matmul.hpp"
+#include "../compute/Matmul_F32_F16.hpp"
 
 namespace mllm {
 

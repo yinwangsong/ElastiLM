@@ -43,13 +43,14 @@ ErrorCode CPULinear::reshape(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
 }
 
 ErrorCode CPULinear::load(AbstructLoader &loader) {
-    // std::cout << name() << "  CPULinear load" << std::endl;
+    std::cout << name() << "  CPULinear load" << std::endl;
     weight_.setName(name() + ".weight");
     weight_.reshape(1, 1, out_features_, in_features_);
     if (loader.getDataType(weight_.name()) != MLLM_TYPE_COUNT) {
         weight_.setDtype(loader.getDataType(weight_.name()));
         weight_.alloc();
         loader.load(&weight_);
+        // weight_.printDataTorchLike<mllm_fp16_t>();
     } else {
         if (weight_.name().find('v') != std::string::npos && Op::noLoadWeightsDtype() == MLLM_TYPE_Q4_0_4_4) {
             weight_.setDtype(MLLM_TYPE_Q4_0);
@@ -122,7 +123,14 @@ ErrorCode CPULinear::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
                 }
             }
         }
-    } else {
+    } else if (weight_.dtype() == MLLM_TYPE_F16) {
+        // inputs[0].get()->printData0<float>();
+        weight_.printData0<mllm_fp16_t>();
+        weight_.printDataTorchLike<mllm_fp16_t>();
+        mat_mul_f32_f16(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, false, true, thread_count);
+        outputs[0].get()->printData0<float>();
+    }
+    else {
         mat_mul(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, false, true, thread_count);
     }
     // std::cout << name() << "  CPULinear()" << std::endl;

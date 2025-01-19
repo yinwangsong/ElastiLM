@@ -200,6 +200,7 @@ class BottleneckLayer : public Module {
         }
         std::vector<Tensor> Forward(std::vector<Tensor> inputs, std::vector<std::any> args) override {
             Tensor layer_input = dense(inputs[0]);
+            layer_input.printDataTorchLike<float>();
             layer_input = layer_norm(layer_input);
             return {layer_input};
         }

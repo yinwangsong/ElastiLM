@@ -17,6 +17,7 @@ ErrorCode mat_mul(Tensor *src0, Tensor *src1, Tensor *dst, bool support_bias, Te
                   bool transpose0, bool transpose1, int thread_count) {
     // src1 = W  src0 = x
     // transpose0=false  transpose1=true
+
     const int M = transpose0 ? src0->dimension() : src0->sequence();
     const int K = transpose0 ? src0->sequence() : src0->dimension();
     const int N = transpose1 ? src1->sequence() : src1->dimension();

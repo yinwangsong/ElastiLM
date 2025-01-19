@@ -30,8 +30,8 @@ int main(int argc, char *argv[]) {
     model.load(model_path);
     // model.setNoLoadWeightsDtype(MLLM_TYPE_F32);
 
-    string text = "hello what is your name?";
-    vector<string> texts = {text, text};
+    string text = "hello what is your name , sdas ?";
+    vector<string> texts = {text};
     for (auto &text : texts) {
         auto inputs = tokenizer.tokenizes(text);
         auto res = model({inputs[0], inputs[1], inputs[2]})[0];

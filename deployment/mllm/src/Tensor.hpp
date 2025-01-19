@@ -1291,7 +1291,7 @@ public:
             return;
         }
 
-        std::cout << "----------------------------------------" << std::endl;
+        std::cout << std::endl << "----------------------------------------" << std::endl;
         std::cout << name() << ": shape:[" << batch() << " " << head() << " " << sequence() << " " << dimension() << "]" << std::endl;
 
         int N = batch();
@@ -1385,6 +1385,7 @@ public:
                 std::cout << std::endl << std::endl;
             }
         }
+        std::cout << std::endl << "----------------------------------------" << std::endl;
     }
 
     template <typename Dtype>
