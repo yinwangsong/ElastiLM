@@ -53,6 +53,7 @@ public:
     }
     vector<Tensor> Forward(vector<Tensor> inputs, vector<std::any> args) override {
         auto x = norm1(inputs[0]);
+        // x.printDataTorchLike<float>();
         x = attention({x, x, x})[0];
         auto tmp = x + inputs[0];
         x = norm2(tmp);
@@ -87,8 +88,11 @@ public:
     }
     vector<Tensor> Forward(vector<Tensor> inputs, vector<std::any> args) override {
         auto x = embedding(inputs[0]);
+        // x.printDataTorchLike<float>();
         for (auto &block : blocks) {
             x = block({x})[0];
+            // x.printDataTorchLike<float>();
+            // exit(1);
         }
         x = norm(x);
         x = lm_head(x);

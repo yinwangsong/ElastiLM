@@ -34,8 +34,10 @@ bool ParamLoader::load(mllm::Tensor *tensor) {
     std::lock_guard<std::mutex> lock(mtx);
     if (offsets_.find(name) == offsets_.end()) { return false; }
     std::pair<uint64_t, uint64_t> offset = offsets_[name];
+    // std::cout<<" "<<data_type_[name]<<std::endl;
     auto *p = tensor->hostPtr<char>();
     fseek(fp_, offset.first, SEEK_SET);
+    // std::cout<<offset.first<<" "<<offset.second<<std::endl;
     size_t read_size = std::min(tensor->cntSize(), offset.second);
     auto _ = fread(p, sizeof(uint8_t), read_size, fp_);
 

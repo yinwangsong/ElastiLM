@@ -474,7 +474,7 @@ private:
                         C[ldc * (jj + j) + (ii + i)] = hsum(Cv[j][i]);
             }
         }
-        std::cout<<"VECTOR_REGISTERS is "<<VECTOR_REGISTERS<<std::endl;
+        // std::cout<<"VECTOR_REGISTERS is "<<VECTOR_REGISTERS<<C[0]<<std::endl;
     }
 
     const TA *const A;
@@ -999,7 +999,7 @@ bool llamafile_sgemm(int64_t m, int64_t n, int64_t k, const void *A, int64_t lda
             return false;
         if (k % 8)
             return false;
-        std::cout<<"The input type before kernel is "<<Btype<<std::endl;
+        // std::cout<<"The input type before kernel is "<<Btype<<std::endl;
         if (Btype != MLLM_TYPE_F16)
             return false;
         tinyBLAS<8, float16x8_t, float16x8_t, mllm_fp16_t, mllm_fp16_t, float> tb{
@@ -1102,6 +1102,8 @@ bool check_llamafile_sgemm(int64_t m, int64_t n, int64_t k, DataType Atype, Data
     assert(k >= 0);
     assert(nth > 0);
     assert(ith < nth);
+
+    // std::cout<<lda<<" "<<ldb<<" "<<ldc<<" "<<k<<" "<<m<<" "<<Ctype<<" "<<Atype<<" "<<n<<" "<<Btype<<std::endl;
 
     if (lda < k)
         return false;

@@ -7,6 +7,7 @@
 #include "models/llama/modeling_llama.hpp"
 #include "models/llama/tokenization_llama.hpp"
 #include "processor/PostProcess.hpp"
+#include <memory/MemInspect.hpp>
 
 using namespace mllm;
 
@@ -14,7 +15,7 @@ int main(int argc, char **argv) {
     cmdline::parser cmdParser;
     cmdParser.add<string>("vocab", 'v', "specify mllm tokenizer model path", false, "../vocab/llama2_vocab.mllm");
     cmdParser.add<string>("model", 'm', "specify mllm model path", false, "../models/llama-2-7b-chat-q4_0_4_4.mllm");
-    cmdParser.add<int>("limits", 'l', "max KV cache size", false, 400);
+    cmdParser.add<int>("limits", 'l', "max KV cache size", false, 100);
     cmdParser.add<int>("thread", 't', "num of threads", false, 4);
     cmdParser.parse_check(argc, argv);
 
@@ -25,7 +26,8 @@ int main(int argc, char **argv) {
 
     auto tokenizer = LLaMATokenizer(vocab_path);
 
-    LLaMAConfig config(tokens_limit, "7B", LLAMAROPE);
+    // LLaMAConfig config(tokens_limit, "7B", HFHUBROPE);
+    LLaMAConfig config(tokens_limit, "3B", HFHUBROPE);
     auto model = LLaMAModel(config);
     model.load(model_path);
 
@@ -37,10 +39,13 @@ int main(int argc, char **argv) {
     for (int i = 0; i < in_strs.size(); ++i) {
         auto in_str = tokenizer.apply_chat_template(in_strs[i]);
         auto input_tensor = tokenizer.tokenize(in_str);
+        std::cout << mllm::physical_memory_used_by_process()/1024 << "MB" <<std::endl;
+        std::cout << mllm::virtual_memory_used_by_process()/1024 << "MB" <<std::endl;
         std::cout << "[Q] " << in_strs[i] << std::endl;
         std::cout << "[A] " << std::flush;
         for (int step = 0; step < 100; step++) {
             auto result = model({input_tensor});
+            // result[0].printDataTorchLike<float>();
             auto [out_string, out_token] = tokenizer.detokenize(result[0]);
             auto [not_end, output_string] = tokenizer.postprocess(out_string);
             if (!not_end) { break; }

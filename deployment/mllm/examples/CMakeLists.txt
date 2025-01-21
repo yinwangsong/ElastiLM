@@ -56,7 +56,7 @@ macro(func_vlm_add_executable target)
 endmacro()
 
 # func_llm_add_executable(mllm_benchmark)
-# func_llm_add_executable(demo_llama)
+func_llm_add_executable(demo_llama)
 # func_llm_add_executable(demo_tinyllama)
 # func_llm_add_executable(demo_stablelm)
 # func_llm_add_executable(demo_sparse_llama)
@@ -79,6 +79,8 @@ endmacro()
 # func_llm_add_executable(demo_minicpm_moe_mbm)
 
 func_llm_add_executable(demo_mobilebert)
+func_llm_add_executable(demo_mlp)
+func_llm_add_executable(demo_elastic_mlp)
 
 # func_vlm_add_executable(demo_llava)
 # func_vlm_add_executable(demo_fuyu)

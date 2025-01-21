@@ -7,6 +7,9 @@
 #include "Tensor.hpp"
 #include "configuration_mobilebert.hpp"
 #include "models/transformer/modeling_transformer.hpp"
+
+#include <memory/MemInspect.hpp>
+
 using namespace mllm;
 
 class MobileBertEmbeddings : public Module {
@@ -68,17 +71,25 @@ class MobileBertSelfAttention : public Module {
         }
 
         std::vector<Tensor> Forward(std::vector<Tensor> inputs, std::vector<std::any> args) override {
+            // inputs[0].printDataTorchLike<float>();
+            // inputs[1].printDataTorchLike<float>();
+            
             Tensor q = query_proj(inputs[0]);
+            // q.printDataTorchLike<float>();
             Tensor k = key_proj(inputs[1]);
+            // k.printDataTorchLike<float>();
             Tensor v = value_proj(inputs[2]);
 
             q = q.view(-1, num_attention_heads, -1, attention_head_size);
             k = k.view(-1, num_attention_heads, -1, attention_head_size);
             v = v.view(-1, num_attention_heads, -1, attention_head_size);
-            
+            // q.printDataTorchLike<float>();
+            // k.printDataTorchLike<float>();
             k = k.transpose(SEQUENCE, DIMENSION);
             Tensor attention_scores = Tensor::mm(q, k);
+            // attention_scores.printDataTorchLike<float>();
             attention_scores = attention_scores / std::sqrt(attention_head_size);
+            // attention_scores.printDataTorchLike<float>();
             attention_scores = softmax(attention_scores);
             Tensor o = Tensor::mm(attention_scores, v);
 
@@ -200,8 +211,9 @@ class BottleneckLayer : public Module {
         }
         std::vector<Tensor> Forward(std::vector<Tensor> inputs, std::vector<std::any> args) override {
             Tensor layer_input = dense(inputs[0]);
-            layer_input.printDataTorchLike<float>();
+            // layer_input.printDataTorchLike<float>();
             layer_input = layer_norm(layer_input);
+            // layer_input.printDataTorchLike<float>();
             return {layer_input};
         }
 
@@ -289,6 +301,7 @@ public:
 
         std::vector<Tensor> self_attention_outputs = attention({query_tensor, key_tensor, value_tensor, layer_input});
         Tensor attention_output = self_attention_outputs[0];
+        // attention_output.printDataTorchLike<float>();
         for(FFNLayer& ffn_module: ffn){
             attention_output = ffn_module({attention_output})[0];
         }
@@ -319,6 +332,8 @@ public:
         for(MobileBertLayer& layer_module : layer){
             std::vector<Tensor> layer_outputs = layer_module({hidden_states});
             hidden_states = layer_outputs[0];
+    std::cout << mllm::physical_memory_used_by_process()/1024 << "MB" <<std::endl;
+    std::cout << mllm::virtual_memory_used_by_process()/1024 << "MB" <<std::endl;
         }
         return {hidden_states};
     }

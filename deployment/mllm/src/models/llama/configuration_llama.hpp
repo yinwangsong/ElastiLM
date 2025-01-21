@@ -96,6 +96,16 @@ public:
             max_position_embeddings = 4096;
             rope_theta = 5000000.0;
             vocab_size = 64000;
+        } else if (billions == "3B" || billions == "3b") {
+            // orca mini 3b https://arxiv.org/abs/2306.02707
+            hidden_dim = 3200;
+            head_size = 32;
+            num_key_value_heads = 32;
+            ffn_hidden = 8640;
+            block_num = 26;
+            max_position_embeddings = 2048;
+            rope_theta = 5000000.0;
+            vocab_size = 32000;
         } else {
             throw std::runtime_error("Unsupported model size");
         }

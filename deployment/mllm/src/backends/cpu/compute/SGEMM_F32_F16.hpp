@@ -2,8 +2,8 @@
 // Created by Rongjie Yi on 24-07-23.
 //
 
-#ifndef MLLM_GEMM_HPP
-#define MLLM_GEMM_HPP
+#ifndef MLLM_GEMMF32F16_HPP
+#define MLLM_GEMMF32F16_HPP
 
 #include "VecDot.hpp"
 using namespace mllm;
@@ -14,4 +14,4 @@ bool llamafile_sgemm_f32_f16(int64_t m, int64_t n, int64_t k, const void *A, int
 
 bool check_llamafile_sgemm_f32_f16(int64_t m, int64_t n, int64_t k, DataType Atype, DataType Btype, DataType Ctype, int64_t lda, int64_t ldb, int64_t ldc);
 
-#endif // MLLM_GEMM_HPP
+#endif // MLLM_GEMMF32F16_HPP

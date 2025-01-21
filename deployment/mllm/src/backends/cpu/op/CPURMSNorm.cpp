@@ -29,6 +29,9 @@ ErrorCode CPURMSNorm::reshape(vector<shared_ptr<Tensor>> inputs, vector<shared_p
 
 ErrorCode CPURMSNorm::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
     auto input = inputs[0];
+    // inputs[0]->printDataTorchLike<float>();
+    // outputs[0]->printDataTorchLike<float>();
+    // weight_.printDataTorchLike<float>();
     int batch = input->batch();
     int dim = input->dimension();
     int seq = input->sequence();
@@ -69,6 +72,7 @@ ErrorCode CPURMSNorm::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_p
             }
         }
     }
+    // exit(1);
     return Op::execute(inputs, outputs);
 }
 ErrorCode CPURMSNorm::load(AbstructLoader &loader) {
@@ -78,11 +82,15 @@ ErrorCode CPURMSNorm::load(AbstructLoader &loader) {
         weight_.setDtype(loader.getDataType(weight_.name()));
         weight_.alloc();
         // auto l = loader.length(weight_.name());
-        loader.load(&weight_);
+        auto res = loader.load(&weight_);
+        // weight_.printDataTorchLike<float>();
+        // std::cout<<"load1 "<<res<<std::endl;
     } else {
         weight_.setDtype(MLLM_TYPE_F32);
         weight_.alloc();
+        // std::cout<<"load2"<<std::endl;
     }
+    // exit(1);
     return Op::load(loader);
 }
 ErrorCode CPURMSNorm::free(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {

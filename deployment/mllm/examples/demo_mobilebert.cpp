@@ -6,6 +6,7 @@
 #include "models/mobilebert/tokenization_mobilebert.hpp"
 #include "cmdline.h"
 #include <vector>
+#include <memory/MemInspect.hpp>
 
 /*
  * an intent to support gte-small BertModel to do text embedding
@@ -30,7 +31,7 @@ int main(int argc, char *argv[]) {
     model.load(model_path);
     // model.setNoLoadWeightsDtype(MLLM_TYPE_F32);
 
-    string text = "hello what is your name , sdas ?";
+    string text = "hello and what is your name aaa ?";
     vector<string> texts = {text};
     for (auto &text : texts) {
         auto inputs = tokenizer.tokenizes(text);

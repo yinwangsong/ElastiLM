@@ -3,6 +3,7 @@
 #include "Types.hpp"
 #include <cstddef>
 #include <iostream>
+#include <memory/MemInspect.hpp>
 
 namespace mllm {
 
@@ -43,7 +44,9 @@ ErrorCode CPULinear::reshape(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
 }
 
 ErrorCode CPULinear::load(AbstructLoader &loader) {
-    std::cout << name() << "  CPULinear load" << std::endl;
+    // std::cout << name() << "  CPULinear load" << std::endl;
+    // std::cout << mllm::physical_memory_used_by_process()/1024 << "MB" <<std::endl;
+    // std::cout << mllm::virtual_memory_used_by_process()/1024 << "MB" <<std::endl;
     weight_.setName(name() + ".weight");
     weight_.reshape(1, 1, out_features_, in_features_);
     if (loader.getDataType(weight_.name()) != MLLM_TYPE_COUNT) {
@@ -124,11 +127,17 @@ ErrorCode CPULinear::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
             }
         }
     } else if (weight_.dtype() == MLLM_TYPE_F16) {
-        // inputs[0].get()->printData0<float>();
-        weight_.printData0<mllm_fp16_t>();
-        weight_.printDataTorchLike<mllm_fp16_t>();
+        // std::cout<<"input"<<std::endl;
+        // inputs[0].get()->printDataTorchLike<mllm_fp16_t>();
+        // weight_.printData0<mllm_fp16_t>();
+        // std::cout<<"weight"<<std::endl;
+        // weight_.printDataTorchLike<mllm_fp16_t>();
+        // std::cout<<"bias"<<std::endl;
+        // bias_.printDataTorchLike<float>();
+        // std::cout<<weight_.dtype()<<" "<<std::endl;
         mat_mul_f32_f16(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, false, true, thread_count);
-        outputs[0].get()->printData0<float>();
+        // exit(1);
+        // outputs[0].get()->printDataTorchLike<float>();
     }
     else {
         mat_mul(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, false, true, thread_count);

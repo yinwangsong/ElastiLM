@@ -34,7 +34,7 @@ ErrorCode CPUElasticLinear::reshape(vector<shared_ptr<Tensor>> inputs, vector<sh
 }
 
 ErrorCode CPUElasticLinear::load(AbstructLoader &loader) {
-    // std::cout << name() << "  CPUElasticLinear load" << std::endl;
+    std::cout << name() << "  CPUElasticLinear load" << std::endl;
     weight_.setName(name() + ".weight");
     weight_.reshape(1, 1, out_features_, in_features_);
     if (loader.getDataType(weight_.name()) != MLLM_TYPE_COUNT) {
@@ -68,6 +68,8 @@ ErrorCode CPUElasticLinear::execute(vector<shared_ptr<Tensor>> inputs, vector<sh
     if (inputs[0]->count() == 0) {
         return Op::execute(inputs, outputs);
     }
+    // inputs[0].get()->printDataTorchLike<float>();
+    // weight_.printDataTorchLike<float>();
     mat_mul_elastic(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, activate_input_dim, activate_output_dim, false, true, thread_count);
     /*
     // std::cout << name() << "  CPUElasticLinear()" << std::endl;

@@ -22,8 +22,10 @@ public:
         // {
         outputs[0]->transCopyShape(inputs[0]->shape());
         if (!Module::llm_model_ptr->op_transposed_flag) {
+            // std::cout<<"aaa"<<std::endl;
             std::map<Chl, int> origin_chls = {{BATCH, 0}, {SEQUENCE, 1}, {HEAD, 2}, {DIMENSION, 3}, {CHANNLE, 1}, {TIME, 2}, {HEIGHT, 3}, {WIDTH, 4}};
             if (std::equal(outputs[0]->chls().begin(), outputs[0]->chls().end(), origin_chls.begin())) {
+                // std::cout<<"bbb"<<std::endl;
                 outputs[0]->chls() = inputs[0]->chls();
                 for (auto axis : axiss) {
                     auto axis0 = axis.first;
@@ -39,12 +41,16 @@ public:
         }
         // if (inputs[0]->masterTensor() != nullptr) {
         if (inputs[0]->masterTensor() != nullptr && (inputs[0]->masterTensor()->name().find("Cache") != std::string::npos || inputs[0]->masterTensor()->name().find("weight") != std::string::npos)) {
+            // std::cout<<"ccc"<<std::endl;
             if (outputs[0]->masterTensor() == nullptr) {
+                // std::cout<<"ddd"<<std::endl;
                 outputs[0]->setDtype(inputs[0]->dtype());
                 outputs[0]->deepCopyFrom(inputs[0], false);
             }
         } else {
+            // std::cout<<"eee"<<std::endl;
             if (inputs[0]->masterTensor() == nullptr) {
+                // std::cout<<"fff"<<std::endl;
                 inputs[0]->free();
             }
             outputs[0]->setDtype(inputs[0]->dtype());
@@ -53,10 +59,12 @@ public:
             inputs[0]->setUndiffusion(true);
             inputs[0]->deepCopyFrom(outputs[0], false);
             outputs[0]->transFrom() = axiss;
+
         }
         // }
     }
     void execute(vector<Tensor *> outputs, vector<Tensor *> inputs, vector<float> args) override {
+        // std::cout<<"transpose execute dtype:"<<outputs[0]->dtype()<<std::endl;
     }
 };
 } // namespace mllm
