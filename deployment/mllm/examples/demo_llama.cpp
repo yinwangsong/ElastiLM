@@ -13,9 +13,9 @@ using namespace mllm;
 
 int main(int argc, char **argv) {
     cmdline::parser cmdParser;
-    cmdParser.add<string>("vocab", 'v', "specify mllm tokenizer model path", false, "../vocab/llama2_vocab.mllm");
+    cmdParser.add<string>("vocab", 'v', "specify mllm tokenizer model path", false, "../vocab/llama2_hf_vocab.mllm");
     cmdParser.add<string>("model", 'm', "specify mllm model path", false, "../models/llama-2-7b-chat-q4_0_4_4.mllm");
-    cmdParser.add<int>("limits", 'l', "max KV cache size", false, 100);
+    cmdParser.add<int>("limits", 'l', "max KV cache size", false, 1000);
     cmdParser.add<int>("thread", 't', "num of threads", false, 4);
     cmdParser.parse_check(argc, argv);
 
@@ -32,20 +32,26 @@ int main(int argc, char **argv) {
     model.load(model_path);
 
     vector<string> in_strs = {
-        "Hello, who are you?",
-        "What can you do?",
+        // "Hello, who are you?",
+        // "What can you do?",
         "Please introduce Beijing University of Posts and Telecommunications."};
 
     for (int i = 0; i < in_strs.size(); ++i) {
         auto in_str = tokenizer.apply_chat_template(in_strs[i]);
-        auto input_tensor = tokenizer.tokenize(in_str);
+        // auto input_tensor = tokenizer.tokenize(in_str);
         std::cout << mllm::physical_memory_used_by_process()/1024 << "MB" <<std::endl;
         std::cout << mllm::virtual_memory_used_by_process()/1024 << "MB" <<std::endl;
         std::cout << "[Q] " << in_strs[i] << std::endl;
         std::cout << "[A] " << std::flush;
-        for (int step = 0; step < 100; step++) {
+        vector<token_id_t> x = {1,  3820,  9630, 11285,  1246,   287, 18123,   291, 10277, 17658, 31843};
+        // for (int i = 0;i < 512; i++){
+        //     x.push_back(1);
+        // }
+        Tensor input_tensor = LLaMATokenizer::tokens2Input(x);
+        input_tensor.printData<float>();
+        for (int step = 0; step < 1; step++) {
             auto result = model({input_tensor});
-            // result[0].printDataTorchLike<float>();
+            result[0].printDataTorchLike<float>();
             auto [out_string, out_token] = tokenizer.detokenize(result[0]);
             auto [not_end, output_string] = tokenizer.postprocess(out_string);
             if (!not_end) { break; }

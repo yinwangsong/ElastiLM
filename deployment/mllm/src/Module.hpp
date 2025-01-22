@@ -222,7 +222,7 @@ public:
             uint64_t time_end = mllm_time_us();
 
             double inference_time_ = (time_end - time_start) / 1000.0F; // ms
-            inference_times_.push_back(inference_time_);
+            inference_times_.push_back(inference_time_);           
             last_shape_bshd_.clear();
             for (auto &input : inputs) {
                 last_shape_bshd_.push_back({input.batch(), input.sequence(),

@@ -1,6 +1,7 @@
 
 #include "CPUElasticLinear.hpp"
 #include "../compute/MatmulElastic.hpp"
+#include "compute/MatmulElastic_F32_F16.hpp"
 
 namespace mllm {
 
@@ -70,7 +71,12 @@ ErrorCode CPUElasticLinear::execute(vector<shared_ptr<Tensor>> inputs, vector<sh
     }
     // inputs[0].get()->printDataTorchLike<float>();
     // weight_.printDataTorchLike<float>();
-    mat_mul_elastic(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, activate_input_dim, activate_output_dim, false, true, thread_count);
+    if (weight_.dtype() == MLLM_TYPE_F16) {
+        mat_mul_elastic_f32_f16(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, activate_input_dim, activate_output_dim, false, true, thread_count);
+        std::cout<<"execute fp16"<<std::endl;
+    } else {
+        mat_mul_elastic(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, activate_input_dim, activate_output_dim, false, true, thread_count);
+    }
     /*
     // std::cout << name() << "  CPUElasticLinear()" << std::endl;
     switch (weight_.dtype()) {
