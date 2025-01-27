@@ -143,6 +143,8 @@ private:
             activation_tensors[name]->initFrom(*activation_tensors[x_name]);
             activation_tensors[name]->setName(name);
             activation_tensors[name]->setModule(module);
+
+            // std::cout<<"kv processing "<<activation_tensors[name]->dtype()<<std::endl;
         }
     }
 
@@ -158,6 +160,10 @@ protected:
         auto &activation_tensors_num = module->activation_tensors_num;
         // Module::runlistIdx = saved_list_idx;
         bool do_init = false;
+
+        // for (const auto &pair : activation_tensors) {
+        //     std::cout<<"start layer.hpp:"<<pair.first<<" "<<pair.second.get()->dtype()<<std::endl;
+        // }
 
         if (module->doLoad || !inited_loaded) {
             // set backend to current module device and try to create op
@@ -227,6 +233,7 @@ protected:
                     activation_tensors[next_name] = std::make_shared<Tensor>(backend_);
                     activation_tensors[next_name]->setName(next_name);
                     activation_tensors[next_name]->setModule(module);
+                    // std::cout<<"layer processing "<<activation_tensors[next_name]->dtype()<<std::endl;
                     activation_tensors_num[next_name] = 0;
                 }
             }
@@ -269,6 +276,7 @@ protected:
 #ifdef DEBUGOPTIME
         auto start_t = mllm_time_us();
 #endif
+        // std::cout<<"in layer.hpp:  "<<output_tensors[0]->dtype()<<std::endl;
         switch (Tensor::tensor_status) {
         case TENSOR_STATIC_INIT: {
             op_->reshape(input_tensors, output_tensors);

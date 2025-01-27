@@ -22,4 +22,5 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 #adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./main_llama"
-adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./demo_elastic_llama -m ../models/orca_mini_3b-fp16.mllm -v ../vocab/orca_vocab.mllm"
+adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./demo_elastic_llama -m ../models/orca_mini_3b-fp16.mllm -v ../vocab/orca_vocab.mllm -t 1 -l 214"
+# adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./demo_elastic_llama -m ../models/orca_mini_3b-fp16.mllm -v ../vocab/orca_vocab.mllm -r 0.8"

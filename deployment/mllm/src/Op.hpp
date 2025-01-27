@@ -59,7 +59,9 @@ public:
      * @return MLLM_NO_ERROR
      */
     virtual ErrorCode setUp(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
+        // std::cout<<name()<<" "<<activation_dtype_<<std::endl;
         for (auto &output : outputs) {
+            // std::cout<<output->name()<<std::endl;
             output->setDtype(activation_dtype_);
             output->alloc();
         }

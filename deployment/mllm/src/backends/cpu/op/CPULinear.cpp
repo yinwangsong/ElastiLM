@@ -135,6 +135,7 @@ ErrorCode CPULinear::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
         // std::cout<<"bias"<<std::endl;
         // bias_.printDataTorchLike<float>();
         // std::cout<<weight_.dtype()<<" "<<std::endl;
+
         mat_mul_f32_f16(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, false, true, thread_count);
         // exit(1);
         // outputs[0].get()->printDataTorchLike<float>();

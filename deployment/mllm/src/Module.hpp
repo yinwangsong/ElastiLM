@@ -210,6 +210,7 @@ public:
                 activation_tensors[input.name()] = std::shared_ptr<Tensor>(&input, [](Tensor *) {});
                 activation_tensors[input.name()]->setName(input.name());
                 activation_tensors[input.name()]->setModule(this);
+                // std::cout<<"input processing"<<activation_tensors[input.name()]->dtype()<<std::endl;
             }
             llm_model_ptr = this;
             Tensor::tensor_status = TENSOR_STATIC_INIT;

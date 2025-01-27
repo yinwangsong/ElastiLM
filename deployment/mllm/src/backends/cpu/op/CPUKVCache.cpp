@@ -51,11 +51,14 @@ ErrorCode CPUKVCache::reshape(vector<shared_ptr<Tensor>> inputs,
                               vector<shared_ptr<Tensor>> outputs) {
     assert(inputs.size() == 1);
     assert(outputs.size() == 1);
+    // std::cout<<inputs[0]->name()<<std::endl;
+    // std::cout<<"haha"<<cache_seq_len_<<std::endl;
     if (cache_seq_len_ < 0) {
         if (for_xnn_) cache_.setDtype(MLLM_TYPE_F32);
 
         cache_.reshape(inputs[0]->batch(), inputs[0]->head() * n_rep_, cache_limit_,
                        inputs[0]->dimension());
+        // std::cout<<"is kv cache right? "<<inputs[0]->head() * n_rep_<<std::endl;
         cache_.setName(name() + ".Cache");
         cache_.alloc();
 

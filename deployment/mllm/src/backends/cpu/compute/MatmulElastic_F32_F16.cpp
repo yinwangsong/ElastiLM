@@ -16,6 +16,9 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
                           bool transpose1, int thread_count) {
     // src1 = W  src0 = x
     // transpose0=false  transpose1=true
+
+    // std::cout<<dst->dtype()<<" dtype";
+
     const int M = transpose0 ? src0->dimension() : src0->sequence();
     const int K = transpose0 ? src0->sequence() : src0->dimension();
     const int N = transpose1 ? src1->sequence() : src1->dimension();
@@ -44,6 +47,7 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
     int ld_dst = dst->sequenceSkipDim();
     if (check_llamafile_sgemm_f32_f16(N, M, K / blck_size(src0->dtype()), src1->dtype(), src0->dtype(), dst->dtype(), ld_src1 / src1_blck_size, ld_src0 / src0_blck_size, ld_dst / blck_size(dst->dtype()))
         && dst->aggregatedTensors().empty()) {
+        // std::cout<<"llamafile kernel"<<std::endl;
         int is_0 = (src1->batch() == 1 && src1->head() == 1) ? 0 : 1;
 #pragma omp parallel for collapse(3) num_threads(thread_count)
         for (int64_t b = 0; b < dst->batch(); b++) {
@@ -73,6 +77,7 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
     if (not_vec_dot_type) {
         // convert x.dtype to vec_dot_type
         // so that we can use vec_dot to calculate dot product
+        // std::cout<<"pre-quantize"<<std::endl;
         assert(src0_dtype == MLLM_TYPE_F32); // x should be fp32
         to = std::make_unique<Tensor>(src0->shape());
         to->setBackend(src0->backend());
@@ -120,6 +125,7 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
     if (check_llamafile_sgemm_f32_f16(N, M, K / blck_size(src1->dtype()), src1->dtype(), src0->dtype(),
                               dst->dtype(), ld_src1 / src1_blck_size, ld_src0 / src0_blck_size, ld_dst / blck_size(dst->dtype()))
         && !support_bias && dst->ctype() == BSHD && dst->aggregatedTensors().empty()) {
+        // std::cout<<"llamafile kernel"<<std::endl;
 #pragma omp parallel for collapse(3) num_threads(thread_count)
         for (int64_t b = 0; b < dst->batch(); b++) {
             for (int64_t h = 0; h < dst->head(); h++) {
@@ -146,6 +152,7 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
 #endif
 
     if (gemv && !support_bias) {
+        // std::cout<<"gemm/gemv kernel"<<std::endl;
         int nth = thread_count;
 #pragma omp parallel for collapse(1) num_threads(thread_count)
         for (int ith = 0; ith < nth; ith++) {
@@ -172,11 +179,25 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
         return MLLM_NO_ERROR;
     }
 
+    // std::cout<<"vector dot kernel"<<dst->aggregated()<<std::endl;
+    // std::cout<<dst->get_shape_master().size()<<std::endl;
+    // if (dst->get_shape_master().size() != 0){
+    //     std::cout<<dst->get_shape_master()[0]<<" "<<dst->get_shape_master()[1]<<" "<<dst->get_shape_master()[2]<<" "<<dst->get_shape_master()[3]<<std::endl;
+    //     std::cout<<dst->get_shape()[1]<<" "<<dst->get_shape()[2]<<" "<<dst->get_shape()[3]<<std::endl;
+    // } 
+    // std::cout<<dst->get_shape_offset().size()<<std::endl;
+    // if (dst->get_shape_offset().size() != 0){
+    //     std::cout<<dst->get_shape_master()[3]<<std::endl;
+    // }
+
     Tensor *src0_cal = src0;
     Tensor *src1_cal = src1;
     const int64_t blck_0 = 16;
     int is_0 = (src1->batch() == 1 && src1->head() == 1) ? 0 : 1;
-#pragma omp parallel for collapse(4) num_threads(thread_count)
+
+    bool flag = true;
+
+    #pragma omp parallel for collapse(4) num_threads(thread_count)
     for (int b = 0; b < src0->batch(); b++) {
         for (int h = 0; h < src0->head(); h++) {
             for (int m = 0; m < M; m++) {
@@ -208,11 +229,27 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
                                 (char *)src0_cal->rawHostPtr()
                                     + src0_cal->offset(b, h, s_0, d_0) * src0_type_size
                                           / src0_blck_size);
+                        // if (dst->name() == "out-model.layers.0.self_attn.v_proj" && flag) {
+                        //     std::cout<<"!!!!!!!! "<<tmp<<" "<<b<<" "<<h<<" "<<m<<" "<<n<<" "<<dst->aggregated()<<std::endl;
+                        //     dst->printDataTorchLike<float>();
+                        //     flag = false;
+                        // }
+                        // if (m==0&&n==0&&b==0&&h==0)
+                        //     std::cout<<tmp<<std::endl;
                         if (dst->dtypeAt(b, h, m, n) == MLLM_TYPE_F32) {
                             dst->setDataAt<float>(b, h, m, n, tmp);
+                            // if (m==0&&n==0&&b==0&&h==0){
+                            //     std::cout<<tmp<<std::endl;
+                            //     std::cout<<*dst->hostPtr<float>()<<std::endl;
+                            //     dst->printDataTorchLike<float>();
+                            // }
+                            // if (std::abs(tmp - -0.0388718) < 1e-6){
+                            //     std::cout<<b<<" "<<h<<" "<<m<<" "<<n<<" "<<(tmp - -0.0388718)<<std::endl;
+                            // }
                             if (support_bias) {
                                 *dst->ptrAt<float>(b, h, m, n) += bias->dataAt<float>(0, 0, 0, n);
                             }
+                            // std::cout<<dst->dataAt<float>(b, h, m, n)<<" is the fp32";
                         } else if (dst->dtypeAt(b, h, m, n) == MLLM_TYPE_F16) {
                             if (support_bias) {
                                 *dst->ptrAt<mllm_fp16_t>(b, h, m, n) =
@@ -220,14 +257,27 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
                             } else {
                                 *dst->ptrAt<mllm_fp16_t>(b, h, m, n) = MLLM_FP32_TO_FP16(tmp);
                             }
+                            // std::cout<<dst->dataAt<mllm_fp16_t>(b, h, m, n)<<" is the fp16";
                         } else {
                             std::cout << "Not support type [Matmul]" << std::endl;
                         }
+                        // exit(1);
                     }
                 }
             }
         }
     }
+
+    // std::cout<<"hhhhhhhhhhhhh";
+    // dst->printDataTorchLike<float>();
+    // for (int dim1 = 0; dim1 < 11; dim1++){
+    //     for (int dim2 = 0; dim2 < 3200; dim2++){
+    //         if (std::abs(dst->dataAt<float>(0, 0, dim1, dim2) - -0.0169144) < 1e-6){
+    //             std::cout<<dim1<<" "<<dim2<<std::endl;
+    //         }
+    //     }
+    // }
+
     if (not_vec_dot_type) to->free();
     return MLLM_NO_ERROR;
 }

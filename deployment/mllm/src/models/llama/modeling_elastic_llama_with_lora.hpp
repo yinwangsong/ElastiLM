@@ -27,6 +27,16 @@ class ElasticMultiHeadAttention final : public Module {
     int kv_head_size_{};
     int attn_hidden_dim_{};
 
+    vector<Layer> lora_q_a;
+    vector<Layer> lora_q_b;
+    vector<Layer> lora_k_a;
+    vector<Layer> lora_k_b;
+    vector<Layer> lora_v_a;
+    vector<Layer> lora_v_b;
+    vector<Layer> lora_o_a;
+    vector<Layer> lora_o_b;
+
+
 public:
     ElasticMultiHeadAttention() = default;
     ElasticMultiHeadAttention(int hidden_dim, int head_size, int kv_head_size, int attn_hidden_dim,
@@ -50,15 +60,15 @@ public:
         }
         softmax = Softmax(DIMENSION, do_mask, base_name + "softmax");
         o_proj = ElasticLinear(head_size * attn_hidden_dim, hidden_dim, bias, base_name + names._o_proj_name);
+
+        // lora_q_a = List<Linear>
     }
     vector<Tensor> Forward(vector<Tensor> inputs, vector<std::any> args) override {
         vector<int> activate_head_dims = std::any_cast<vector<int>>(args[0]);
         int activate_head_dim = activate_head_dims[0];
         activate_head_dim = (activate_head_dim == -1) ? kv_head_size_ : (activate_head_dim);
         Tensor q, k, v;
-        // inputs[0].printDataTorchLike<float>();
         q = q_proj(inputs[0], -1, activate_head_dim * attn_hidden_dim_);
-        // q.printDataTorchLike<float>();
         k = k_proj(inputs[1], -1, activate_head_dim * attn_hidden_dim_);
         v = v_proj(inputs[2], -1, activate_head_dim * attn_hidden_dim_);
         q = q.view(-1, activate_head_dim, -1, attn_hidden_dim_);
@@ -70,23 +80,17 @@ public:
         }
         if (k_cache.ready() && v_cache.ready()) {
             k = k_cache(k);
-            // std::cout<<"before v cache\n";
-            // v.printShape();
             v = v_cache(v);
         }
-        // k.printDataTorchLike<float>();
-        // v.printDataTorchLike<float>();
         k = k.transpose(SEQUENCE, DIMENSION);
         auto qk = Tensor::mm(q, k);
         qk = qk / std::sqrt(attn_hidden_dim_); // attn_hidden_dim_
-       
         if (k_cache.ready() && v_cache.ready()) {
             qk = softmax(qk, k_cache.getCacheSeqLen());
         } else {
             qk = softmax(qk);
         }
         auto o = Tensor::mm(qk, v);
-        // o.printDataTorchLike<float>(); 
         o = o.view(-1, 1, -1, attn_hidden_dim_ * activate_head_dim);
         o = o_proj(o, activate_head_dim * attn_hidden_dim_, -1);
         return {o};
@@ -157,7 +161,7 @@ public:
     }
 };
 
-class ElasticLLaMAModel final : public Module {
+class ElasticLLaMAModelWithLoRA final : public Module {
     Layer embedding;
     vector<ElasticLLaMABlock> blocks;
     Layer norm;
@@ -165,11 +169,11 @@ class ElasticLLaMAModel final : public Module {
     int num_layer_size;
 
 public:
-    explicit ElasticLLaMAModel(const LLaMAConfig &config) :
-        ElasticLLaMAModel(config.vocab_size, config.hidden_dim, config.head_size, config.ffn_hidden, config.block_num, config.RoPE_type, config.cache_limit,
+    explicit ElasticLLaMAModelWithLoRA(const LLaMAConfig &config) :
+        ElasticLLaMAModelWithLoRA(config.vocab_size, config.hidden_dim, config.head_size, config.ffn_hidden, config.block_num, config.RoPE_type, config.cache_limit,
                           config.names_config, config.names_config.blk_name) {
     }
-    ElasticLLaMAModel(int vocab_size, int hidden_dim, int head_size, int ffn_hidden, int block_num, RoPEType RoPE_type, int cache_limit,
+    ElasticLLaMAModelWithLoRA(int vocab_size, int hidden_dim, int head_size, int ffn_hidden, int block_num, RoPEType RoPE_type, int cache_limit,
                       const LLaMANameConfig &names, const string &base_name) {
         embedding = Embedding(vocab_size, hidden_dim, names.token_embd_name);
         blocks = List<ElasticLLaMABlock>(block_num, hidden_dim, head_size, ffn_hidden, RoPE_type, cache_limit, names, base_name);

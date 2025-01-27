@@ -18,6 +18,7 @@ CPUElasticLinear::CPUElasticLinear(Backend *bn, string opName, int in_features, 
 
 ErrorCode CPUElasticLinear::reshape(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
     // std::cout << name() << "  CPUElasticLinear  reshape" << std::endl;
+    // std::cout<<outputs[0].get()->dtype()<<" is before-reshape \n";
     assert(inputs.size() == 3);
     assert(outputs.size() == 1);
     int activate_input_dim = (int)inputs[1]->dataAt<float>(0, 0, 0, 0);
@@ -31,11 +32,12 @@ ErrorCode CPUElasticLinear::reshape(vector<shared_ptr<Tensor>> inputs, vector<sh
     assert(inputs[0]->head() == 1);
     assert(in_dimension == inputs[0]->dimension());
     outputs[0]->reshape(inputs[0]->batch(), inputs[0]->head(), inputs[0]->sequence(), out_dimension);
+    // std::cout<<outputs[0].get()->dtype()<<" is after-reshape \n";
     return Op::reshape(inputs, outputs);
 }
 
 ErrorCode CPUElasticLinear::load(AbstructLoader &loader) {
-    std::cout << name() << "  CPUElasticLinear load" << std::endl;
+    // std::cout << name() << "  CPUElasticLinear load" << std::endl;
     weight_.setName(name() + ".weight");
     weight_.reshape(1, 1, out_features_, in_features_);
     if (loader.getDataType(weight_.name()) != MLLM_TYPE_COUNT) {
@@ -72,8 +74,20 @@ ErrorCode CPUElasticLinear::execute(vector<shared_ptr<Tensor>> inputs, vector<sh
     // inputs[0].get()->printDataTorchLike<float>();
     // weight_.printDataTorchLike<float>();
     if (weight_.dtype() == MLLM_TYPE_F16) {
+        // std::cout<<outputs[0].get()->dtype()<<" is pre-kernel \n";
+        // if (outputs[0].get()->name() == "out-model.layers.X.self_attn.k_proj") {
+        //     std::cout<<"special flag";
+        //     inputs[0].get()->printDataTorchLike<float>();
+        //     weight_.printDataTorchLike<mllm_fp16_t>();
+        //     outputs[0].get()->printDataTorchLike<float>();
+        // }
         mat_mul_elastic_f32_f16(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, activate_input_dim, activate_output_dim, false, true, thread_count);
-        std::cout<<"execute fp16"<<std::endl;
+        // if (outputs[0].get()->name() == "out-model.layers.0.self_attn.v_proj") {
+        //     std::cout<<"special flag";
+
+        // }
+        // outputs[0].get()->printDataTorchLike<float>();
+        // std::cout<<"execute fp16"<<std::endl;
     } else {
         mat_mul_elastic(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, activate_input_dim, activate_output_dim, false, true, thread_count);
     }

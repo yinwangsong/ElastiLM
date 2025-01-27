@@ -24,7 +24,7 @@ public:
         return cache_seq_len_;
     }
     void clearCache() override {
-        cache_seq_len_ = 0;
+        cache_seq_len_ = -1;
     }
 
     void setForXnn(bool for_xnn) {

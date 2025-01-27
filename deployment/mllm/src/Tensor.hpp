@@ -75,6 +75,19 @@ public:
 
     static TensorStatus tensor_status;
 
+    /**
+     * THIS IS ONLY A TEMPORARY INTERFACE FOR DEBUGGING
+     */
+    vector<uint64_t> get_shape_master() {
+        return shape_master_;
+    }
+    vector<uint64_t> get_shape_offset() {
+        return shape_offset_;
+    }
+    vector<uint64_t> get_shape() {
+        return shape_;
+    }
+
 private:
     std::map<Chl, int> chls_ = {{BATCH, 0}, {SEQUENCE, 1}, {HEAD, 2}, {DIMENSION, 3}, {CHANNLE, 1}, {TIME, 2}, {HEIGHT, 3}, {WIDTH, 4}};
     string name_;
