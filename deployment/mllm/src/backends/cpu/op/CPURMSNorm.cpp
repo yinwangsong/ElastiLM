@@ -12,7 +12,6 @@ namespace mllm {
 CPURMSNorm::CPURMSNorm(Backend *bn, string opName, int normSize, float epsilon, bool add_unit_offset_, int threadCount) :
     thread_count(threadCount), add_unit_offset_(add_unit_offset_),
     Op(bn, opName), epsilon_(epsilon) {
-    std::cout << name() << "  CPURMSNorm  init" << std::endl;
     // op_params[0] = 897988541;s, sizeof(float));
     // memcpy(&epsilon_, op_param)
     normSize_ = normSize;
@@ -24,17 +23,15 @@ ErrorCode CPURMSNorm::reshape(vector<shared_ptr<Tensor>> inputs, vector<shared_p
     assert(normSize_ == inputs[0]->dimension());
     outputs[0]->reshape(inputs[0]->batch(), inputs[0]->head(), inputs[0]->sequence(), inputs[0]->dimension());
     // outputs[0]->setDtype(activationDtype());
-    std::cout << name() << "  CPURMSNorm  reshape" << std::endl;
-    weight_.printDataTorchLike<float>();
+    // std::cout << name() << "  CPURMSNorm  reshape" << std::endl;
     return Op::reshape(inputs, outputs);
 }
 
 ErrorCode CPURMSNorm::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
     auto input = inputs[0];
-    std::cout<<"rms norm execute\n";
-    inputs[0]->printDataTorchLike<float>();
-    outputs[0]->printDataTorchLike<float>();
-    weight_.printDataTorchLike<float>();
+    // inputs[0]->printDataTorchLike<float>();
+    // outputs[0]->printDataTorchLike<float>();
+    // weight_.printDataTorchLike<float>();
     int batch = input->batch();
     int dim = input->dimension();
     int seq = input->sequence();
@@ -51,13 +48,11 @@ ErrorCode CPURMSNorm::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_p
                 }
                 const float mean = sum_squares / dim;
                 const float rms = 1.0f / sqrtf(mean + epsilon_);
-                std::cout<<outputs[0]->dataAt<float>(n, h, s, 0)<<std::endl;
+
                 memcpy(outputs[0]->ptrAt<float>(n, h, s, 0),
                        inputs[0]->ptrAt<float>(n, h, s, 0),
                        dim * sizeof(float));
-                std::cout<<outputs[0]->dataAt<float>(n, h, s, 0)<<" "<<rms<<std::endl;
                 vec_scale_f32(dim, outputs[0]->ptrAt<float>(n, h, s, 0), rms);
-                std::cout<<outputs[0]->dataAt<float>(n, h, s, 0)<<" "<<rms<<std::endl<<std::endl;
             }
         }
     }
@@ -78,7 +73,6 @@ ErrorCode CPURMSNorm::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_p
         }
     }
     // exit(1);
-    outputs[0]->printDataTorchLike<float>();
     return Op::execute(inputs, outputs);
 }
 ErrorCode CPURMSNorm::load(AbstructLoader &loader) {
@@ -88,10 +82,8 @@ ErrorCode CPURMSNorm::load(AbstructLoader &loader) {
         weight_.setDtype(loader.getDataType(weight_.name()));
         weight_.alloc();
         // auto l = loader.length(weight_.name());
-        std::cout<<"loading the rms weights\n";
         auto res = loader.load(&weight_);
-        std::cout<<res<<std::endl;
-        weight_.printDataTorchLike<float>();
+        // weight_.printDataTorchLike<float>();
         // std::cout<<"load1 "<<res<<std::endl;
     } else {
         weight_.setDtype(MLLM_TYPE_F32);
@@ -102,7 +94,6 @@ ErrorCode CPURMSNorm::load(AbstructLoader &loader) {
     return Op::load(loader);
 }
 ErrorCode CPURMSNorm::free(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
-    std::cout<<"THE WEIGHT IS FREED\n";
     weight_.free();
     return Op::free(inputs, outputs);
 }

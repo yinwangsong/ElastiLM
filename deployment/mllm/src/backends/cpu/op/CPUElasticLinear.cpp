@@ -44,8 +44,6 @@ ErrorCode CPUElasticLinear::load(AbstructLoader &loader) {
         weight_.setDtype(loader.getDataType(weight_.name()));
         weight_.alloc();
         loader.load(&weight_);
-        std::cout<<"loading the linear weights\n";
-        weight_.printDataTorchLike<mllm_fp16_t>();
     } else {
         weight_.setDtype(MLLM_TYPE_F32);
         weight_.alloc();
@@ -74,8 +72,7 @@ ErrorCode CPUElasticLinear::execute(vector<shared_ptr<Tensor>> inputs, vector<sh
         return Op::execute(inputs, outputs);
     }
     // inputs[0].get()->printDataTorchLike<float>();
-    std::cout<<"linear weights\n";
-    weight_.printDataTorchLike<float>();
+    // weight_.printDataTorchLike<float>();
     if (weight_.dtype() == MLLM_TYPE_F16) {
         // std::cout<<outputs[0].get()->dtype()<<" is pre-kernel \n";
         // if (outputs[0].get()->name() == "out-model.layers.X.self_attn.k_proj") {

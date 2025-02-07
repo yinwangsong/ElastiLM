@@ -81,7 +81,6 @@ func_llm_add_executable(demo_elastic_llama)
 func_llm_add_executable(demo_mobilebert)
 func_llm_add_executable(demo_mlp)
 func_llm_add_executable(demo_elastic_mlp)
-func_llm_add_executable(demo_elastic_llama_lora)
 
 # func_vlm_add_executable(demo_llava)
 # func_vlm_add_executable(demo_fuyu)

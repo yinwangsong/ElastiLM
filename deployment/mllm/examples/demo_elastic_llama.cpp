@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
         //     x.push_back(1);
         // }
         Tensor input_tensor = LLaMATokenizer::tokens2Input(x);
-        // input_tensor.printData<float>();
+        input_tensor.printData<float>();
         // for (int step = 0; step < 1; step++) {
         //     float ratio = 0.8; // 0.25; //0.5;
         //     vector<vector<int>> activate_dims = {
