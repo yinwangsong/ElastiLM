@@ -27,7 +27,10 @@ namespace mllm {
 
 class Layer {
 public:
-    Layer() = default;
+    // Layer() = default;
+    Layer() {
+        std::cout << "Layer default constructor called." << std::endl;
+    }
     void init(std::string name, OpType type) {
         name_ = std::move(name);
         param_["type"] = type;
@@ -87,6 +90,7 @@ public:
             }
 #else
             op_ = backend_->opCreate(param_, name_);
+
 #endif
         }
         op_->load(*Module::llm_model_ptr->loader);
@@ -150,6 +154,10 @@ private:
 
 protected:
     vector<std::reference_wrapper<Tensor>> run(vector<Tensor> inputs, int N = 1) {
+
+        cnt += 1;
+        std::cout<<"calling run"<<cnt<<" "<<(op_==nullptr)<<std::endl;
+
         Module *module;
         if (!inputs.empty()) {
             module = inputs[0].module();
@@ -189,10 +197,14 @@ protected:
                     op_ = backend_->opCreate(param_, name_);
                 }
 #else
+                std::cout<<"possible op init is here\n";
                 op_ = backend_->opCreate(param_, name_);
+
+                std::cout<<"is op nullpter?"<<(op_ == nullptr)<<std::endl;
 #endif
             }
             if (module->doLoad) {
+                // std::cout<<"loading\n";
                 op_->load(*module->loader);
                 inited_loaded = true;
             } else if (loaded_param) {
@@ -342,6 +354,8 @@ protected:
     OpParam param_;
     bool init_ = false;
     int saved_list_idx;
+
+    int cnt = 0;
 };
 
 class Linear final : public Layer {

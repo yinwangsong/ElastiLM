@@ -61,6 +61,16 @@ public:
 private:
     template <typename... Args>
     vector<std::any> convertArgsToAnyVector(Args... args) {
+        // std::cout << "coverting\n";
+        // // 打印参数包中的元素数量
+        // std::cout << "Number of elements in args: " << sizeof...(Args) << '\n';
+
+        // // 打印所有参数
+        // if constexpr (sizeof...(Args) > 0) {
+        //     ((std::cout << args << ' '), ...); // 使用折叠表达式依次打印参数
+        //     std::cout << '\n'; // 换行
+        // }
+
         return vector<std::any>{std::any(args)...};
     }
 
@@ -119,6 +129,7 @@ public:
     }
 
     void load(string path) {
+        // std::cout<<"no overrided\n";
         // create global loader and save to llm_model_ptr.loader as QNNBackend needs to load weights in runtime
         loader = new ParamLoader(std::move(path));
         load(*loader);
@@ -136,6 +147,7 @@ public:
             t.setName("input" + std::to_string(i));
             t.reshape(1, 1, 1, 10);
             t.alloc();
+            // t.printDataTorchLike<float>();
             t.setModule(this);
             tmps.push_back(t);
         }
@@ -148,9 +160,11 @@ public:
         for (auto args : alternate_args) {
             time_start = mllm_time_us();
             try {
+                // std::cout<<"args tried"<<std::endl;
                 operator()(tmps, args);
                 break;
             } catch (const std::exception &e) {
+                // std::cout<<e.what()<<std::endl;
 #if not defined(__ARM_NEON)
                 if (std::string("bad any_cast") != e.what()) {
                     MLLM_LOG_ERROR_STREAM << e.what() << std::endl;
@@ -158,6 +172,7 @@ public:
                 }
 #endif
             } catch (...) {
+                std::cout<<"load error"<<std::endl;
                 MLLM_LOG_ERROR_STREAM << "load error" << std::endl;
                 exit(0);
             }
@@ -179,12 +194,16 @@ public:
 
     template <typename... Args>
     vector<Tensor> operator()(vector<Tensor> inputs, Args... args) {
+        // std::cout<<idx<<" blocking"<<std::endl;
+        // std::cout<<args;
+        // std::cout<< "[] " << sizeof...(Args) << '\n';
         vector<std::any> anyArgs = convertArgsToAnyVector(args...);
         // set static tmp_device to device_ to init layers' op
         auto previoud_device = tmp_device;
         Module::tmp_device = device_;
         // Module Loading
         if (llm_model_ptr && llm_model_ptr->doLoad) {
+            // std::cout<<"begin 123\n";
             auto outputs = Forward(inputs, anyArgs);
             // for inner module, set output tensors to GRAPH_OUTPUT
             if (inputs[0].ttype() != TensorType::INPUT_TENSOR) { // XPUs' module should not be the outermost input tensor
@@ -194,6 +213,7 @@ public:
             }
             // set Module::tmp_device to previous device
             Module::tmp_device = previoud_device;
+            // std::cout<<"end 123\n";
             return outputs;
         }
         // Module setUp & execute
@@ -203,6 +223,7 @@ public:
             } else if (decoding_token_size_ == 0) {
                 decoding_token_size_ = inputs[0].sequence();
             }
+            // std::cout<<"begin 456\n";
             for (int i = 0; i < inputs.size(); i++) {
                 auto &input = inputs[i];
                 input.setName("input" + std::to_string(i));
@@ -212,11 +233,13 @@ public:
                 activation_tensors[input.name()]->setModule(this);
                 // std::cout<<"input processing"<<activation_tensors[input.name()]->dtype()<<std::endl;
             }
+            // std::cout<<"end 456\n";
             llm_model_ptr = this;
             Tensor::tensor_status = TENSOR_STATIC_INIT;
 
             uint64_t time_start = mllm_time_us();
             Forward(inputs, anyArgs);
+            std::cout<<"tensor static ready\n";
             Tensor::tensor_status = TENSOR_STATIC_READY;
             // uint64_t time_start = mllm_time_us();
             auto output = Forward(inputs, anyArgs);
