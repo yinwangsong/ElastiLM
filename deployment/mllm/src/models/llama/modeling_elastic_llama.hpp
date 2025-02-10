@@ -178,6 +178,7 @@ public:
         num_layer_size = block_num;
     }
     vector<Tensor> Forward(vector<Tensor> inputs, vector<std::any> args) override {
+        std::cout<<"forward start\n";
         vector<vector<int>> activate_dims = std::any_cast<vector<vector<int>>>(args[0]);
         assert(activate_dims.size() == num_layer_size);
         auto x = embedding(inputs[0]);

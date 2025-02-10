@@ -36,9 +36,12 @@ ErrorCode CPUEmbedding::load(AbstructLoader &loader) {
         weight_.setDtype(MLLM_TYPE_F32);
         weight_.alloc();
     }
+    weight_.printDataTorchLike<float>();
     return Op::load(loader);
 }
 ErrorCode CPUEmbedding::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_ptr<Tensor>> outputs) {
+
+    weight_.printDataTorchLike<float>();
     assert(inputs.size() == 1);
     assert(outputs.size() == 1);
     auto &input = inputs[0];
