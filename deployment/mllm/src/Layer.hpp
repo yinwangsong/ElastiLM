@@ -137,7 +137,6 @@ private:
         }
         renameX_names.insert(renameX_names.end(), new_names.begin(), new_names.end());
         for (const auto x_name : renameX_names) {
-            std::cout<<x_name<<std::endl;
             auto name = name_X_to_num(x_name, saved_list_idx);
             layername_2_tensorname[name] = name;
             activation_tensors[name] = std::make_shared<Tensor>(backend_);
@@ -223,7 +222,6 @@ protected:
                             layername_2_tensorname[layer_next_name] = layer_next_name;
                             init_reset_KVCache(inputs[0].name(), module);
                         } else {
-                            // std::cout<<layer_next_name<<std::endl;
                             layername_2_tensorname[layer_next_name] = name_num_to_X(layer_next_name);
                         }
                     }

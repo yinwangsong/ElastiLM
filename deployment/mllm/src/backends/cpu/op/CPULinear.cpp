@@ -141,7 +141,6 @@ ErrorCode CPULinear::execute(vector<shared_ptr<Tensor>> inputs, vector<shared_pt
         // outputs[0].get()->printDataTorchLike<float>();
     }
     else {
-        // weight_.printDataTorchLike<float>();
         mat_mul(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, false, true, thread_count);
     }
     // std::cout << name() << "  CPULinear()" << std::endl;

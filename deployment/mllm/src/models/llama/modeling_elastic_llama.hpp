@@ -64,12 +64,6 @@ public:
         q = q.view(-1, activate_head_dim, -1, attn_hidden_dim_);
         k = k.view(-1, activate_head_dim, -1, attn_hidden_dim_);
         v = v.view(-1, activate_head_dim, -1, attn_hidden_dim_);
-
-        if(Tensor::tensor_status == TENSOR_STATIC_READY) {
-            v.printDataTorchLike<float>();
-            exit(0);
-        }
-
         if (q_rope.ready() && k_rope.ready()) {
             q = q_rope(q);
             k = k_rope(k);

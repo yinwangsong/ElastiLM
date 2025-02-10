@@ -1099,9 +1099,6 @@ bool llamafile_sgemm_f32_f16(int64_t m, int64_t n, int64_t k, const void *A, int
 }
 
 bool check_llamafile_sgemm_f32_f16(int64_t m, int64_t n, int64_t k, DataType Atype, DataType Btype, DataType Ctype, int64_t lda, int64_t ldb, int64_t ldc) {
-
-    std::cout<<lda<<" "<<ldb<<" "<<ldc<<" "<<k<<" "<<m<<" "<<Ctype<<" "<<Atype<<" "<<n<<" "<<Btype<<std::endl;
-    
     int ith = 0;
     int nth = 1;
     assert(m >= 0);

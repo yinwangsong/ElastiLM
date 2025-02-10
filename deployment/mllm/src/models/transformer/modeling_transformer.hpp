@@ -85,9 +85,6 @@ public:
             k = k.view(-1, kv_head_size_, -1, attn_hidden_dim_);
             v = v.view(-1, kv_head_size_, -1, attn_hidden_dim_);
         }
-        if(Tensor::tensor_status == TENSOR_STATIC_READY) {
-            exit(0);
-        }
         if (q_norm.ready() && k_norm.ready()) {
             q = q_norm(q);
             k = k_norm(k);
