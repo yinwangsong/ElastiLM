@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
         std::cout << mllm::virtual_memory_used_by_process()/1024 << "MB" <<std::endl;
         std::cout << "[Q] " << in_strs[i] << std::endl;
         std::cout << "[A] " << std::flush;
-        vector<token_id_t> x = {1,  3820,  9630, 11285,  1246,   287, 18123,   291, 10277, 17658, 31843};
+        vector<token_id_t> x = {1,  3820,  9630, 11285,  1246,   287, 18123,   291, 10277, 17658, 31843, 2, 2};
         // for (int i = 0;i < 512; i++){
         //     x.push_back(1);
         // }

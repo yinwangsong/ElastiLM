@@ -338,13 +338,17 @@ public:
     }
     int sequenceSkipDim() const {
         if (master_tensor_ != NULL) {
+            // std::cout << "<" << shape_[0] << " " << shape_[1] << " " << shape_[2]  << " " << shape_[3] << ">";
             if (master_tensor_->master_tensor_ != NULL) {
                 auto shape = master_tensor_->master_tensor_->shape_;
                 if (master_tensor_->master_tensor_->ctype_ == BSHD) {
+                    // std::cout << "BSHD " << shape[3] * shape[2] <<std::endl;
                     return shape[3] * shape[2];
                 } else if (master_tensor_->master_tensor_->ctype_ == BHDS) {
+                    // std::cout << "BHDS " << shape[3] <<std::endl;
                     return shape[3];
                 } else if (master_tensor_->master_tensor_->ctype_ == BDHS) {
+                    // std::cout << "BDHS " << shape[3] * shape_[2] <<std::endl;
                     return shape[3] * shape_[2];
                 } else {
                     std::cout << "sequenceSkipDim() only support for BSHD and BHDS" << std::endl;
@@ -353,10 +357,13 @@ public:
             } else {
                 auto shape = master_tensor_->shape_;
                 if (master_tensor_->ctype_ == BSHD) {
+                    // std::cout << "BSHD " << shape[3] * shape[2] <<std::endl;
                     return shape[3] * shape[2];
                 } else if (master_tensor_->ctype_ == BHDS) {
+                    // std::cout << "BHDS " << shape[3] <<std::endl;
                     return shape[3];
                 } else if (master_tensor_->ctype_ == BDHS) {
+                    // std::cout << "BDHS " << shape[3] * shape_[2] <<std::endl;
                     return shape[3] * shape_[2];
                 } else {
                     std::cout << "sequenceSkipDim() only support for BSHD and BHDS" << std::endl;
@@ -364,15 +371,21 @@ public:
                 }
             }
         } else {
+            // std::cout << "[" << shape_[0] << " " << shape_[1] << " " << shape_[2]  << " " << shape_[3] << "]";
             if (ctype_ == BSHD) {
+                // std::cout << "BSHD " << shape_[3] * shape_[2] <<std::endl;
                 return shape_[3] * shape_[2];
             } else if (ctype_ == BHDS) {
+                // std::cout << "BHDS " << shape_[3] <<std::endl;
                 return shape_[3];
             } else if (ctype_ == BDHS) {
+                // std::cout << "BDHS " << shape_[3] * shape_[2] <<std::endl;
                 return shape_[3] * shape_[2];
             } else if (ctype_ == DBHS) {
+                // std::cout << "DBHS " << shape_[3] * shape_[2] <<std::endl;
                 return shape_[3] * shape_[2];
             } else if (ctype_ == SBHD) {
+                // std::cout << "SBHD " << shape_[3] * shape_[2] <<std::endl;
                 return shape_[3] * shape_[2];
             } else {
                 std::cout << "sequenceSkipDim() only support for BSHD and BHDS" << std::endl;
@@ -869,6 +882,7 @@ public:
      *                 used for repeat the head of K/V in Transformer-based LLMs. Default is 1.
      */
     void deepCopyFrom(Tensor *source, bool copyshape = true, const vector<int> &shape_offset = {}, int head_rep = 1) {
+        // std::cout<<source->name()<<" "<<this->name()<<std::endl;
         if (!shape_offset.empty()) {
             copyshape = false;
         }

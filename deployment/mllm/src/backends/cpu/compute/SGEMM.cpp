@@ -1103,7 +1103,7 @@ bool check_llamafile_sgemm(int64_t m, int64_t n, int64_t k, DataType Atype, Data
     assert(nth > 0);
     assert(ith < nth);
 
-    // std::cout<<lda<<" "<<ldb<<" "<<ldc<<" "<<k<<" "<<m<<" "<<Ctype<<" "<<Atype<<" "<<n<<" "<<Btype<<std::endl;
+    std::cout<<lda<<" "<<ldb<<" "<<ldc<<" "<<k<<" "<<m<<" "<<Ctype<<" "<<Atype<<" "<<n<<" "<<Btype<<std::endl;
 
     if (lda < k)
         return false;

@@ -206,6 +206,7 @@ ErrorCode mat_mul(Tensor *src0, Tensor *src1, Tensor *dst, bool support_bias, Te
         return MLLM_NO_ERROR;
     }
 
+    // std::cout<<"vector dot kernel"<<std::endl;
     Tensor *src0_cal = src0;
     Tensor *src1_cal = src1;
     const int64_t blck_0 = 16;

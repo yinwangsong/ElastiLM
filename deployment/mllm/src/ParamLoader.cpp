@@ -191,8 +191,11 @@ size_t MultiFileParamLoader::getTensorSize(string name) {
 
 DataType MultiFileParamLoader::getDataType(string name) {
     auto it = data_type_.find(name);
-    if (it == data_type_.end())
-        throw std::runtime_error("name: '" + name + "' not found, can not get data type");
+    if (it == data_type_.end()) {
+        MLLM_LOG_ERROR_STREAM << name << " not found" << std::endl;
+        // throw std::runtime_error("name: '" + name + "' not found, can not get data type");
+    }
+
     return data_type_[name];
 }
 
@@ -218,7 +221,7 @@ void MultiFileParamLoader::load_file(const string &filename) {
         offsets_[name] = std::make_pair(offset, length);
         data_type_[name] = type;
         files_[name] = fp;
-//        printf("loaded %s\n", name.c_str());
+        // printf("loaded %s\n", name.c_str());
     }
 }
 MultiFileParamLoader::~MultiFileParamLoader() {

@@ -148,6 +148,15 @@ public:
     void execute(vector<Tensor *> outputs, vector<Tensor *> inputs, vector<float> args) override {
         auto input0 = inputs[0];
         auto input1 = inputs[1];
+        // inputs[0]->printDataTorchLike<float>();
+        // inputs[1]->printDataTorchLike<float>();
+        // std::cout<<inputs[0]->dataAt<float>(0, 0, 0, 1)<<" ";
+        // std::cout<<inputs[1]->dataAt<float>(0, 0, 0, 1)<<" ";
+
+
+        // outputs[0]->printDataTorchLike<float>();
+        // std::cout<<outputs[0]->name();
+        // std::cout<<outputs[0]->dataAt<float>(0, 0, 0, 1)<<" "<<outputs[0]->dataAt<float>(0, 0, 1, 1)<<" "<<outputs[0]->dataAt<float>(0, 0, 2, 1)<<std::endl;
         int batch_ = std::max(input0->batch(), input1->batch());
         for (int n = 0; n < batch_; ++n) {
             auto n_0 = std::min(n, input0->batch() - 1);
@@ -155,12 +164,17 @@ public:
 #pragma omp parallel for collapse(2) num_threads(CPUBackend::cpu_threads)
             for (int c = 0; c < input0->head(); ++c) {
                 for (int h = 0; h < input0->sequence(); ++h) {
+                    // std::cout<<input0->dataAt<float>(n_0, c, h, 1)<<" "<<input1->dataAt<float>(n_0, c, h, 1)<<std::endl;
+                    // std::cout<<n<<" "<<c<<" "<<h<<" "<<outputs[0]->dataAt<float>(n, c, h, 1)<<std::endl;
+                    // std::cout<<outputs[0]->dataAt<float>(0, 0, 0, 1)<<" "<<outputs[0]->dataAt<float>(0, 0, 1, 1)<<" "<<outputs[0]->dataAt<float>(0, 0, 2, 1)<<std::endl;
                     mllm_add_fp32(input0->ptrAt<float>(n_0, c, h, 0),
                                   input1->ptrAt<float>(n_1, c, h, 0),
                                   outputs[0]->ptrAt<float>(n, c, h, 0), input0->dimension());
+                    // std::cout<<n<<" "<<c<<" "<<h<<" "<<outputs[0]->dataAt<float>(n, c, h, 1)<<std::endl;
                 }
             }
         }
+        std::cout<<outputs[0]->dataAt<float>(0, 0, 0, 1)<<std::endl;
     };
 };
 class CPUsubTwoFunction : public TensorFunction {

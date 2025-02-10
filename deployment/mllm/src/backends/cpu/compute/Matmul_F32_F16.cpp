@@ -18,6 +18,15 @@ ErrorCode mat_mul_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool support_
     // src1 = W  src0 = x
     // transpose0=false  transpose1=true
 
+    std::cout<<src0->name()<<std::endl;
+    std::cout<<src0->ctype()<<std::endl;
+
+    std::cout<<src1->name()<<std::endl;
+    std::cout<<src1->ctype()<<std::endl;
+
+    std::cout<<dst->name()<<std::endl;
+    std::cout<<dst->ctype()<<std::endl;
+
     const int M = transpose0 ? src0->dimension() : src0->sequence();
     const int K = transpose0 ? src0->sequence() : src0->dimension();
     const int N = transpose1 ? src1->sequence() : src1->dimension();
@@ -41,6 +50,7 @@ ErrorCode mat_mul_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool support_
     int ld_src1 = src1->sequenceSkipDim();
     int ld_src0 = src0->sequenceSkipDim();
     int ld_dst = dst->sequenceSkipDim();
+    // std::cout<<std::endl<<ld_dst<<" "<<blck_size(dst->dtype())<<std::endl;
     if (check_llamafile_sgemm_f32_f16(N, M, K / blck_size(src0->dtype()), src1->dtype(), src0->dtype(), dst->dtype(), ld_src1 / src1_blck_size, ld_src0 / src0_blck_size, ld_dst / blck_size(dst->dtype()))
         && dst->aggregatedTensors().empty()) {
         // std::cout<<"llamafile kernel"<<std::endl;
@@ -83,6 +93,7 @@ ErrorCode mat_mul_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool support_
         to->setDtype(vec_dot_type);
         to->alloc();
         to->setName(src0->name() + "-vec_dot");
+        std::cout<<vec_dot_type<<" "<<to->dtype()<<std::endl;
         int64_t i_processed = 0;
         if ((from_float_to_mat != nullptr) && (gemv != nullptr) && dst->masterTensor() == nullptr) {
             for (int b = 0; b < src0->batch(); b++) {
@@ -99,6 +110,8 @@ ErrorCode mat_mul_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool support_
                 }
             }
         }
+        std::cout<<src0->dtype()<<std::endl;
+        std::cout<<to->dtype()<<std::endl;
         #pragma omp parallel for collapse(3) num_threads(thread_count)
         for (int b = 0; b < src0->batch(); b++) {
             for (int h = 0; h < src0->head(); h++) {
@@ -121,6 +134,7 @@ ErrorCode mat_mul_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool support_
     ld_src1 = src1->sequenceSkipDim();
     ld_src0 = src0->sequenceSkipDim();
     ld_dst = dst->sequenceSkipDim();
+    std::cout<<src0->dtype()<<std::endl;
     if (check_llamafile_sgemm_f32_f16(N, M, K / blck_size(src1->dtype()), src1->dtype(), src0->dtype(),
                               dst->dtype(), ld_src1 / src1_blck_size, ld_src0 / src0_blck_size, ld_dst / blck_size(dst->dtype()))
         && dst->dtypeAt(0, 0, 0, 0) == MLLM_TYPE_F32 && dst->ctype() == BSHD

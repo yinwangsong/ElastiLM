@@ -19,6 +19,15 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
 
     // std::cout<<dst->dtype()<<" dtype";
 
+    std::cout<<src0->name()<<std::endl;
+    std::cout<<src0->ctype()<<std::endl;
+
+    std::cout<<src1->name()<<std::endl;
+    std::cout<<src1->ctype()<<std::endl;
+
+    std::cout<<dst->name()<<std::endl;
+    std::cout<<dst->ctype()<<std::endl;
+
     const int M = transpose0 ? src0->dimension() : src0->sequence();
     const int K = transpose0 ? src0->sequence() : src0->dimension();
     const int N = transpose1 ? src1->sequence() : src1->dimension();
@@ -45,9 +54,10 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
     int ld_src1 = src1->sequenceSkipDim();
     int ld_src0 = src0->sequenceSkipDim();
     int ld_dst = dst->sequenceSkipDim();
+    std::cout<<ld_dst<<" "<<blck_size(dst->dtype())<<std::endl;
     if (check_llamafile_sgemm_f32_f16(N, M, K / blck_size(src0->dtype()), src1->dtype(), src0->dtype(), dst->dtype(), ld_src1 / src1_blck_size, ld_src0 / src0_blck_size, ld_dst / blck_size(dst->dtype()))
         && dst->aggregatedTensors().empty()) {
-        // std::cout<<"llamafile kernel"<<std::endl;
+        std::cout<<"llamafile kernel"<<std::endl;
         int is_0 = (src1->batch() == 1 && src1->head() == 1) ? 0 : 1;
 #pragma omp parallel for collapse(3) num_threads(thread_count)
         for (int64_t b = 0; b < dst->batch(); b++) {
@@ -189,6 +199,9 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
     // if (dst->get_shape_offset().size() != 0){
     //     std::cout<<dst->get_shape_master()[3]<<std::endl;
     // }
+
+
+    std::cout<<"vector dot kernel"<<std::endl;
 
     Tensor *src0_cal = src0;
     Tensor *src1_cal = src1;
