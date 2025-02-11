@@ -123,6 +123,13 @@ public:
         loader = new ParamLoader(std::move(path));
         load(*loader);
     }
+
+    void load_from_multifiles(const std::initializer_list<string> &paths) {
+        // create global loader and save to llm_model_ptr.loader as QNNBackend needs to load weights in runtime
+        loader = new MultiFileParamLoader(paths);
+        load(*loader);
+    }
+
     void load(AbstructLoader &param_loader) {
         Tensor::tensor_status = TENSOR_STATIC_INIT;
         mllm_time_init();

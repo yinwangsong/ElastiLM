@@ -11,6 +11,28 @@
 #include "ParamLoader.hpp"
 #include "Timing.hpp"
 using std::function;
+
+#include <vector>
+#include <set>
+#include <Tensor.hpp>
+
+namespace Elastilm {
+
+    extern int RANK;
+    extern int SUBMODEL_NUM;
+    extern std::vector<std::vector<int>> submodel_attn_hidden_dims; // SUBMODEL_NUM * 2
+    extern std::vector<std::vector<int>> submodel_mlp_hidden_dims;
+    extern float submodel_lora_scale;
+    extern std::set<int> anchor_layers;
+    extern std::vector<int> layers_order;
+
+    extern mllm::Tensor inner_rank_buffer;
+
+    extern int LEVEL;
+    extern int CUR_LAYER_ID;
+    extern int IS_ANCHOR_LAYER;
+};
+
 namespace mllm {
 
 class Backend;

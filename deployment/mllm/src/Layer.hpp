@@ -428,6 +428,23 @@ public:
     }
 };
 
+class ElasticLinearWithLoRA final : public Layer {
+public:
+    ElasticLinearWithLoRA() = default;
+    explicit ElasticLinearWithLoRA(int in_features, int out_features, bool bias, std::string name) {
+        param_["in_features"] = in_features;
+        param_["out_features"] = out_features;
+        param_["bias"] = (float)bias;
+        init(std::move(name), OpType::ELASTICLINEARWITHLORA);
+    }
+    Tensor &operator()(Tensor &input0, int activate_input_dim, int activate_output_dim) {
+        auto activate_input_dim_tensor = Tensor(activate_input_dim, backend_);
+        auto activate_output_dim_tensor = Tensor(activate_output_dim, backend_);
+        auto ts = run({input0, activate_input_dim_tensor, activate_output_dim_tensor}, 1);
+        return ts[0].get();
+    }
+};
+
 class ShadowLinear final : public Layer {
 public:
     ShadowLinear() = default;
@@ -730,6 +747,7 @@ public:
         return op_->getCacheSeqLen();
     }
     void clearCache() {
+        // std::cout<<"clearCache\n";
         return op_->clearCache();
     }
 };

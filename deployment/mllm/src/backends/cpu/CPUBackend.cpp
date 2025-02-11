@@ -51,6 +51,7 @@
 #include "op/CPUSparseIdLinear.hpp"
 #include "op/CPUSparseLinear.hpp"
 #include "op/CPUElasticLinear.hpp"
+#include "op/CPUElasticLinearWithLoRA.hpp"
 #include "op/CPUQuantize.hpp"
 #include "op/CPUMergeOutput.hpp"
 #include "op/CPULinearINT8Shadow.hpp"
@@ -170,6 +171,7 @@ void CPUBackend::registerOps() {
     addCreator(SPARSELINEAR, (CPUBackend::Creator *)(new CPUSparseLinearCreator()));
     addCreator(SPARSEIDLINEAR, (CPUBackend::Creator *)(new CPUSparseIdLinearCreator()));
     addCreator(ELASTICLINEAR, (CPUBackend::Creator *)(new CPUElasticLinearCreator()));
+    addCreator(ELASTICLINEARWITHLORA, (CPUBackend::Creator *)(new CPUElasticLinearWithLoRACreator()));
     addCreator(POSITION, (CPUBackend::Creator *)(new CPUPositionCreator()));
     addCreator(QUANTIZE, (CPUBackend::Creator *)(new CPUQuantizeCreator()));
     addCreator(MERGEOUTPUT, (CPUBackend::Creator *)(new CPUMergeOutputCreator()));

@@ -191,8 +191,11 @@ size_t MultiFileParamLoader::getTensorSize(string name) {
 
 DataType MultiFileParamLoader::getDataType(string name) {
     auto it = data_type_.find(name);
-    if (it == data_type_.end())
-        throw std::runtime_error("name: '" + name + "' not found, can not get data type");
+    if (it == data_type_.end()) {
+        MLLM_LOG_ERROR_STREAM << name << " not found" << std::endl;
+        // throw std::runtime_error("name: '" + name + "' not found, can not get data type");
+    }
+
     return data_type_[name];
 }
 
