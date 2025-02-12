@@ -460,6 +460,7 @@ public:
         if (!aggregated_) {
             return ((Dtype *)host_ptr_ + offset(batch, head, sequence, dimension));
         } else {
+            std::cout<<"aggregated\n";
             int b = batch;
             int h = head;
             int s = sequence;

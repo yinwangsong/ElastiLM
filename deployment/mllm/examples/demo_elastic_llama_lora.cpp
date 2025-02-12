@@ -44,6 +44,8 @@ int main(int argc, char **argv) {
         {(int)(config.head_size * 0.1) * (int)(config.hidden_dim/config.head_size), (int)(config.head_size * 1.0) * (int)(config.hidden_dim/config.head_size)}, // 9
     };
 
+    // std::cout<<Elastilm::submodel_attn_hidden_dims
+
     Elastilm::submodel_mlp_hidden_dims = {
         {(int)(config.ffn_hidden * 1.0), (int)(config.ffn_hidden * 1.0)}, // 0 level
         {(int)(config.ffn_hidden * 0.9), (int)(config.ffn_hidden * 1.0)}, // 1
@@ -71,11 +73,10 @@ int main(int argc, char **argv) {
     Elastilm::layers_order.insert(Elastilm::layers_order.end(), Elastilm::anchor_layers.begin(), Elastilm::anchor_layers.end());
 
     auto model = ElasticLLaMAModelWithLoRA(config);
-
     model.load_from_multifiles({model_path, lora_path});
 
-    Elastilm::LEVEL = 0;
 
+    Elastilm::LEVEL = 9;
     vector<string> in_strs = {
         // " Hello, who are you?",
         // " What can you do?",
@@ -101,96 +102,17 @@ int main(int argc, char **argv) {
         Elastilm::inner_rank_buffer.setDtype(MLLM_TYPE_F32);
         Elastilm::inner_rank_buffer.alloc();
 
-        // for (int step = 0; step < 1; step++) {
-        //     float ratio = 0.8; // 0.25; //0.5;
-        //     vector<vector<int>> activate_dims = {
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 0
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 1
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 2
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 3
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 4
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 5
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 6
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 7
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 8
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 9
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 10
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 11
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 12
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 13
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 14
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 15
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 16
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 17
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 18
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 19
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 20
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 21
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 22
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 23
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 24
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 25
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 26
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 27
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 28
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 29
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 30
-        //         {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}  // 31
-        //     };
-        //     auto result = model({input_tensor}, activate_dims);
-        //     result[0].printDataTorchLike<float>();
-        //     // auto [out_string, out_token] = tokenizer.detokenize(result[0]);
-        //     // auto [not_end, output_string] = tokenizer.postprocess(out_string);
-        //     // if (!not_end) { break; }
-        //     // std::cout << output_string << std::flush;
-        //     // chatPostProcessing(out_token, input_tensor, {});
-        // }
-        // printf("\n");
-        // model.clear_kvcache();
-
-
-        // x = {1,  3820,  9630, 11285,  1246,   287, 18123,   291, 10277, 17658, 31843};
-        // // for (int i = 0;i < 512; i++){
-        // //     x.push_back(1);
-        // // }
-        // input_tensor = LLaMATokenizer::tokens2Input(x);
-        // input_tensor.printData<float>();
         for (int step = 0; step < 1; step++) {
-            float ratio = 1.0; // 0.25; //0.5;
-            vector<vector<int>> activate_dims = {
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 0
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 1
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 2
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 3
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 4
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 5
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 6
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 7
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 8
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 9
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 10
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 11
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 12
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 13
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 14
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 15
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 16
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 17
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 18
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 19
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 20
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 21
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 22
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 23
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 24
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 25
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 26
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 27
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 28
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 29
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}, // 30
-                {(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)}  // 31
-            };
+            float ratio = float(Elastilm::SUBMODEL_NUM - Elastilm::LEVEL) / 10.0f;
+            vector<vector<int>> activate_dims = {};
+            for (int layer_id = 0; layer_id < config.block_num; layer_id++) {
+                if (Elastilm::anchor_layers.find(layer_id) == Elastilm::anchor_layers.end()) {
+                    std::cout<<ratio<<"\n";
+                    activate_dims.push_back({(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)});
+                } else {
+                    activate_dims.push_back({(int)(config.head_size * 1.0), (int)(config.ffn_hidden * 1.0)});
+                }
+            }
             auto result = model({input_tensor}, activate_dims);
             result[0].printDataTorchLike<float>();
             auto [out_string, out_token] = tokenizer.detokenize(result[0]);

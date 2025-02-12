@@ -5,6 +5,7 @@
 #include "compute/Matmul.hpp"
 #include "compute/Arithmetic.hpp"
 
+#include <cstring>
 
 namespace mllm {
 
@@ -56,11 +57,44 @@ ErrorCode CPUElasticLinearWithLoRA::execute(vector<shared_ptr<Tensor>> inputs, v
     if (weight_.dtype() == MLLM_TYPE_F16) {
         // std::cout << name() << "  mm1" << std::endl;
         mat_mul(inputs[0].get(), &loras_a_[Elastilm::LEVEL], &Elastilm::inner_rank_buffer, false, nullptr, false, true, thread_count);
-        Elastilm::inner_rank_buffer.printDataTorchLike<float>();
+        // Elastilm::inner_rank_buffer.printDataTorchLike<float>();
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     exit(-1);
+        // }
+
+        loras_b_[Elastilm::LEVEL].printDataTorchLike<float>();
+
         mat_mul(&Elastilm::inner_rank_buffer, &loras_b_[Elastilm::LEVEL], outputs[0].get(), false, nullptr, false, true, thread_count);
+
+
+        // matmul does not need to clear the buffer C
+        // std::memset(outputs[0].get()->ptrAt<float>(0, 0, 0, 0), 0, 4*outputs[0].get()->count());
+        // outputs[0].get()->printDataTorchLike<float>();
+        // std::cout<<outputs[0].get()->count()<<std::endl;
+        // mllm_mul_fp32(outputs[0].get()->ptrAt<float>(0, 0, 0, 0), Elastilm::submodel_lora_scale, outputs[0].get()->ptrAt<float>(0, 0, 0, 0), outputs[0].get()->count());
+
         outputs[0].get()->printDataTorchLike<float>();
-        mllm_mul_fp32(outputs[0].get()->ptrAt<float>(0, 0, 0, 0), Elastilm::submodel_lora_scale, outputs[0].get()->ptrAt<float>(0, 0, 0, 0), outputs[0].get()->count());
+
+        for (int b = 0; b < outputs[0].get()->batch(); b++){
+            for (int h = 0; h < outputs[0].get()->head(); h++){
+                for (int s = 0; s < outputs[0].get()->sequence(); s++){
+                    for (int d = 0; d < outputs[0].get()->dimension(); d++){
+                        outputs[0].get()->setDataAt<float>(b, h, s, d, outputs[0].get()->dataAt<float>(b, h, s, d) * Elastilm::submodel_lora_scale);
+                    }
+                }
+            }
+        }
+        // std::cout<<outputs[0].get()->child_tensors_
+
+        outputs[0].get()->printDataTorchLike<float>();
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     exit(-1);
+        // }
+        // we modify the mat_mul_elastic_f32_f16 to merge the lora output to the mm output
         mat_mul_elastic_f32_f16(inputs[0].get(), &weight_, outputs[0].get(), support_bias_, &bias_, activate_input_dim, activate_output_dim, false, true, thread_count);
+        // inputs[0].get()->printDataTorchLike<float>();
+        // weight_.printDataTorchLike<mllm_fp16_t>();
+        // outputs[0].get()->printDataTorchLike<float>();
     } else {
         std::cout<<"Currently data type not supported!\n";
     }
@@ -79,6 +113,7 @@ ErrorCode CPUElasticLinearWithLoRA::load(AbstructLoader &loader) {
         weight_.setDtype(MLLM_TYPE_F32);
         weight_.alloc();
     }
+    // weight_.printDataTorchLike<mllm_fp16_t>();
     if (support_bias_) {
         bias_.setName(name() + ".bias");
         bias_.reshape(1, 1, 1, out_features_);
@@ -98,14 +133,16 @@ ErrorCode CPUElasticLinearWithLoRA::load(AbstructLoader &loader) {
 
         int in_features_lora;
         int out_features_lora;
+
+        // std::cout<<Elastilm::LEVEL<<" "<<Elastilm::IS_ANCHOR_LAYER<<" "<<Elastilm::submodel_attn_hidden_dims[Elastilm::LEVEL][0]<<std::endl;
         
         if (weight_.name().find("attn") != std::string::npos) {
             if (weight_.name().find("q_proj") != std::string::npos || weight_.name().find("k_proj") != std::string::npos || weight_.name().find("v_proj") != std::string::npos) {
                 in_features_lora = in_features_;
-                out_features_lora = Elastilm::submodel_attn_hidden_dims[Elastilm::LEVEL][Elastilm::IS_ANCHOR_LAYER];
+                out_features_lora = Elastilm::submodel_attn_hidden_dims[i][Elastilm::IS_ANCHOR_LAYER];
             }
             if (weight_.name().find("o_proj") != std::string::npos) {
-                in_features_lora = Elastilm::submodel_attn_hidden_dims[Elastilm::LEVEL][Elastilm::IS_ANCHOR_LAYER];;
+                in_features_lora = Elastilm::submodel_attn_hidden_dims[i][Elastilm::IS_ANCHOR_LAYER];;
                 out_features_lora = out_features_;
             }
         }
@@ -113,10 +150,10 @@ ErrorCode CPUElasticLinearWithLoRA::load(AbstructLoader &loader) {
         if (weight_.name().find("mlp") != std::string::npos) {
             if (weight_.name().find("gate_proj") != std::string::npos || weight_.name().find("up_proj") != std::string::npos) {
                 in_features_lora = in_features_;
-                out_features_lora = Elastilm::submodel_mlp_hidden_dims[Elastilm::LEVEL][Elastilm::IS_ANCHOR_LAYER];
+                out_features_lora = Elastilm::submodel_mlp_hidden_dims[i][Elastilm::IS_ANCHOR_LAYER];
             }
             if (weight_.name().find("down_proj") != std::string::npos) {
-                in_features_lora = Elastilm::submodel_mlp_hidden_dims[Elastilm::LEVEL][Elastilm::IS_ANCHOR_LAYER];;
+                in_features_lora = Elastilm::submodel_mlp_hidden_dims[i][Elastilm::IS_ANCHOR_LAYER];;
                 out_features_lora = out_features_;
             }
         }
@@ -124,6 +161,8 @@ ErrorCode CPUElasticLinearWithLoRA::load(AbstructLoader &loader) {
 
         loras_a_[i].reshape(1, 1, Elastilm::RANK, in_features_lora);
         loras_b_[i].reshape(1, 1, out_features_lora, Elastilm::RANK);
+
+        // std::cout<<in_features_lora<<" "<<out_features_lora<<std::endl;
 
         if (loader.getDataType(loras_a_[i].name()) != MLLM_TYPE_COUNT) {
             loras_a_[i].setDtype(loader.getDataType(loras_a_[i].name()));

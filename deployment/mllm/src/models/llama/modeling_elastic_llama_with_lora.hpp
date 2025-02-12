@@ -63,6 +63,12 @@ public:
         q = q_proj(inputs[0], -1, activate_head_dim * attn_hidden_dim_);
         k = k_proj(inputs[1], -1, activate_head_dim * attn_hidden_dim_);
         v = v_proj(inputs[2], -1, activate_head_dim * attn_hidden_dim_);
+
+        v.printDataTorchLike<float>();
+
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     exit(-1);
+        // }
         q = q.view(-1, activate_head_dim, -1, attn_hidden_dim_);
         k = k.view(-1, activate_head_dim, -1, attn_hidden_dim_);
         v = v.view(-1, activate_head_dim, -1, attn_hidden_dim_);
@@ -192,6 +198,10 @@ public:
                 x = blocks[cur_block]({x}, activate_dims[id])[0];
                 cur_block += 1;
             }
+            // x.printDataTorchLike<float>();
+            // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+            //     exit(-1);
+            // }
         }
         x = norm(x);
         x = lm_head(x);

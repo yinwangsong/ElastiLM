@@ -473,11 +473,16 @@ private:
             if (bias) {
                 for (int64_t j = 0; j < RN; ++j)
                     for (int64_t i = 0; i < RM; ++i)
-                        C[ldc * (jj + j) + (ii + i)] = bias[ii + i] + hsum(Cv[j][i]);
+                        C[ldc * (jj + j) + (ii + i)] += bias[ii + i] + hsum(Cv[j][i]);
             } else {
+                // std::cout<<C[0]<<"\n";
                 for (int64_t j = 0; j < RN; ++j)
-                    for (int64_t i = 0; i < RM; ++i)
-                        C[ldc * (jj + j) + (ii + i)] = hsum(Cv[j][i]);
+                    for (int64_t i = 0; i < RM; ++i){
+                        // std::cout<<C[ldc * (jj + j) + (ii + i)]<<" "<<hsum(Cv[j][i])<<" ";
+                        C[ldc * (jj + j) + (ii + i)] += hsum(Cv[j][i]);
+                        // std::cout<<C[ldc * (jj + j) + (ii + i)]<<"\n";
+                    }
+                // std::cout<<C[0]<<"\n";
             }
         }
     }

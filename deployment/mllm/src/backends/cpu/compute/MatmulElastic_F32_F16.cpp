@@ -190,6 +190,8 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
     //     std::cout<<dst->get_shape_master()[3]<<std::endl;
     // }
 
+    // std::cout<<"vector dot kernel\n";
+
     Tensor *src0_cal = src0;
     Tensor *src1_cal = src1;
     const int64_t blck_0 = 16;
@@ -237,7 +239,7 @@ ErrorCode mat_mul_elastic_f32_f16(Tensor *src0, Tensor *src1, Tensor *dst, bool 
                         // if (m==0&&n==0&&b==0&&h==0)
                         //     std::cout<<tmp<<std::endl;
                         if (dst->dtypeAt(b, h, m, n) == MLLM_TYPE_F32) {
-                            dst->setDataAt<float>(b, h, m, n, tmp);
+                            dst->setDataAt<float>(b, h, m, n, dst->dataAt<float>(b, h, m, n) + tmp);
                             // if (m==0&&n==0&&b==0&&h==0){
                             //     std::cout<<tmp<<std::endl;
                             //     std::cout<<*dst->hostPtr<float>()<<std::endl;
