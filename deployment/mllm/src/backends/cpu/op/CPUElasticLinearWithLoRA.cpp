@@ -62,7 +62,7 @@ ErrorCode CPUElasticLinearWithLoRA::execute(vector<shared_ptr<Tensor>> inputs, v
         //     exit(-1);
         // }
 
-        loras_b_[Elastilm::LEVEL].printDataTorchLike<float>();
+        // loras_b_[Elastilm::LEVEL].printDataTorchLike<float>();
 
         mat_mul(&Elastilm::inner_rank_buffer, &loras_b_[Elastilm::LEVEL], outputs[0].get(), false, nullptr, false, true, thread_count);
 
@@ -73,7 +73,7 @@ ErrorCode CPUElasticLinearWithLoRA::execute(vector<shared_ptr<Tensor>> inputs, v
         // std::cout<<outputs[0].get()->count()<<std::endl;
         // mllm_mul_fp32(outputs[0].get()->ptrAt<float>(0, 0, 0, 0), Elastilm::submodel_lora_scale, outputs[0].get()->ptrAt<float>(0, 0, 0, 0), outputs[0].get()->count());
 
-        outputs[0].get()->printDataTorchLike<float>();
+        // outputs[0].get()->printDataTorchLike<float>();
 
         for (int b = 0; b < outputs[0].get()->batch(); b++){
             for (int h = 0; h < outputs[0].get()->head(); h++){
@@ -86,7 +86,7 @@ ErrorCode CPUElasticLinearWithLoRA::execute(vector<shared_ptr<Tensor>> inputs, v
         }
         // std::cout<<outputs[0].get()->child_tensors_
 
-        outputs[0].get()->printDataTorchLike<float>();
+        // outputs[0].get()->printDataTorchLike<float>();
         // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
         //     exit(-1);
         // }

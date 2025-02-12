@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
             vector<vector<int>> activate_dims = {};
             for (int layer_id = 0; layer_id < config.block_num; layer_id++) {
                 if (Elastilm::anchor_layers.find(layer_id) == Elastilm::anchor_layers.end()) {
-                    std::cout<<ratio<<"\n";
+                    // std::cout<<ratio<<"\n";
                     activate_dims.push_back({(int)(config.head_size * ratio), (int)(config.ffn_hidden * ratio)});
                 } else {
                     activate_dims.push_back({(int)(config.head_size * 1.0), (int)(config.ffn_hidden * 1.0)});

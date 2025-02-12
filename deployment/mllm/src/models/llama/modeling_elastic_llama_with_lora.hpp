@@ -64,7 +64,7 @@ public:
         k = k_proj(inputs[1], -1, activate_head_dim * attn_hidden_dim_);
         v = v_proj(inputs[2], -1, activate_head_dim * attn_hidden_dim_);
 
-        v.printDataTorchLike<float>();
+        // v.printDataTorchLike<float>();
 
         // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
         //     exit(-1);

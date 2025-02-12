@@ -101,7 +101,7 @@ ErrorCode CPUKVCache::load(AbstructLoader &loader) {
 
 ErrorCode CPUKVCache::execute(vector<shared_ptr<Tensor>> inputs,
                               vector<shared_ptr<Tensor>> outputs) {
-    std::cout<<name()<<std::endl;
+    // std::cout<<name()<<std::endl;
     
     int cache_seq_len_old = cache_seq_len_;
     cache_seq_len_ += inputs[0]->sequence();
