@@ -56,11 +56,11 @@ macro(func_vlm_add_executable target)
 endmacro()
 
 # func_llm_add_executable(mllm_benchmark)
-func_llm_add_executable(demo_llama)
+# func_llm_add_executable(demo_llama)
 # func_llm_add_executable(demo_tinyllama)
 # func_llm_add_executable(demo_stablelm)
 # func_llm_add_executable(demo_sparse_llama)
-func_llm_add_executable(demo_elastic_llama)
+# func_llm_add_executable(demo_elastic_llama)
 func_llm_add_executable(demo_elastic_llama_lora)
 # func_llm_add_executable(demo_gemma)
 # func_llm_add_executable(demo_gemma2)
@@ -79,9 +79,9 @@ func_llm_add_executable(demo_elastic_llama_lora)
 # func_llm_add_executable(demo_llama3)
 # func_llm_add_executable(demo_minicpm_moe_mbm)
 
-func_llm_add_executable(demo_mobilebert)
-func_llm_add_executable(demo_mlp)
-func_llm_add_executable(demo_elastic_mlp)
+# func_llm_add_executable(demo_mobilebert)
+# func_llm_add_executable(demo_mlp)
+# func_llm_add_executable(demo_elastic_mlp)
 
 # func_vlm_add_executable(demo_llava)
 # func_vlm_add_executable(demo_fuyu)
@@ -94,19 +94,19 @@ func_llm_add_executable(demo_elastic_mlp)
 
 # QNN demo
 
-if(QNN)
-    func_llm_add_executable(demo_qwen_npu)
-    func_llm_add_executable(main_qwen_npu)
-    func_llm_add_executable(demo_phonelm_npu)
-    func_llm_add_executable(main_phonelm_npu)
-    func_llm_add_executable(demo_qwen2.5_npu)
-    func_llm_add_executable(demo_qwen_pipeline)
-endif()
+# if(QNN)
+#     func_llm_add_executable(demo_qwen_npu)
+#     func_llm_add_executable(main_qwen_npu)
+#     func_llm_add_executable(demo_phonelm_npu)
+#     func_llm_add_executable(main_phonelm_npu)
+#     func_llm_add_executable(demo_qwen2.5_npu)
+#     func_llm_add_executable(demo_qwen_pipeline)
+# endif()
 
 
-if(MLLM_BUILD_XNNPACK_BACKEND)
-    func_llm_add_executable(demo_qwen_xp)
-endif()
+# if(MLLM_BUILD_XNNPACK_BACKEND)
+#     func_llm_add_executable(demo_qwen_xp)
+# endif()
 
 
 # old main

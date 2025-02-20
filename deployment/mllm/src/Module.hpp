@@ -87,6 +87,15 @@ public:
         return device_;
     }
 
+
+    template <typename Dtype>
+    void printActivations() {
+        for (const auto& pair : activation_tensors) {
+            std::cout << "Key: " << pair.first << std::endl;
+            pair.second->printDataTorchLike<Dtype>();
+        }
+    }
+
     static void initBackend(BackendType type = BackendType::MLLM_CPU) {
         if (Backend::global_backends.find(type) == Backend::global_backends.end() || Backend::global_backends[type] == nullptr) {
             switch (type) {

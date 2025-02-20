@@ -9,7 +9,7 @@
 namespace Elastilm {
 
     int RANK = 8;
-    int SUBMODEL_NUM = 10;
+    int SUBMODEL_NUM = 9;
     std::vector<std::vector<int>> submodel_attn_hidden_dims; // SUBMODEL_NUM * 2
     std::vector<std::vector<int>> submodel_mlp_hidden_dims;
     float submodel_lora_scale;

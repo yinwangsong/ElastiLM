@@ -39,6 +39,7 @@ public:
             scores.push_back(value);
         }
         auto token_idx = argmax(scores);
+        std::cout<<token_idx<<std::endl;
         return {BPETokenizer::detokenize({token_idx}), token_idx};
     }
     std::pair<bool, std::string> postprocess(std::string &text) override {

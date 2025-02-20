@@ -38,6 +38,12 @@
 #ifdef __ARM_NEON
 #include <arm_neon.h>
 #endif
+
+namespace Elastilm {
+
+    extern bool is_v_proj;
+};
+
 #if defined(__ARM_NEON) && defined(__ARM_FEATURE_FMA)
 
 // F32 NEON

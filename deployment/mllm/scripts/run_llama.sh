@@ -9,11 +9,11 @@ adb -H host.docker.internal push ../vocab/orca_vocab.mllm /data/local/tmp/mllm/v
 adb -H host.docker.internal push ../bin-arm/demo_llama /data/local/tmp/mllm/bin/
 # adb -H host.docker.internal push ../models/orca_mini_3b-fp16.mllm /data/local/tmp/mllm/models/
 
-if ! adb -H host.docker.internal shell [ -f "/data/local/tmp/mllm/models/orca_mini_3b-fp16.mllm" ]; then
-    adb -H host.docker.internal push ../models/orca_mini_3b-fp16.mllm /data/local/tmp/mllm/models/
-else
-    echo "orca_mini_3b-fp16 file already exists"
-fi
+# if ! adb -H host.docker.internal shell [ -f "/data/local/tmp/mllm/models/orca_mini_3b-fp16.mllm" ]; then
+#     adb -H host.docker.internal push ../models/orca_mini_3b-fp16.mllm /data/local/tmp/mllm/models/
+# else
+#     echo "orca_mini_3b-fp16 file already exists"
+# fi
 
 
 # if push failed, exit

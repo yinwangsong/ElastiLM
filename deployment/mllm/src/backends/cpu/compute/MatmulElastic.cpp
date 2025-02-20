@@ -46,7 +46,7 @@ ErrorCode mat_mul_elastic(Tensor *src0, Tensor *src1, Tensor *dst, bool support_
     int ld_src1 = src1->sequenceSkipDim();
     int ld_src0 = src0->sequenceSkipDim();
     int ld_dst = dst->sequenceSkipDim();
-    if (check_llamafile_sgemm(N, M, K / blck_size(src0->dtype()), src1->dtype(), src0->dtype(), dst->dtype(), ld_src1 / src1_blck_size, ld_src0 / src0_blck_size, ld_dst / blck_size(dst->dtype()))
+    if (!Elastilm::is_v_proj && check_llamafile_sgemm(N, M, K / blck_size(src0->dtype()), src1->dtype(), src0->dtype(), dst->dtype(), ld_src1 / src1_blck_size, ld_src0 / src0_blck_size, ld_dst / blck_size(dst->dtype()))
         && dst->aggregatedTensors().empty()) {
         int is_0 = (src1->batch() == 1 && src1->head() == 1) ? 0 : 1;
 #pragma omp parallel for collapse(3) num_threads(thread_count)
@@ -121,7 +121,7 @@ ErrorCode mat_mul_elastic(Tensor *src0, Tensor *src1, Tensor *dst, bool support_
     ld_src1 = src1->sequenceSkipDim();
     ld_src0 = src0->sequenceSkipDim();
     ld_dst = dst->sequenceSkipDim();
-    if (check_llamafile_sgemm(N, M, K / blck_size(src1->dtype()), src1->dtype(), src0->dtype(),
+    if (!Elastilm::is_v_proj && check_llamafile_sgemm(N, M, K / blck_size(src1->dtype()), src1->dtype(), src0->dtype(),
                               dst->dtype(), ld_src1 / src1_blck_size, ld_src0 / src0_blck_size, ld_dst / blck_size(dst->dtype()))
         && !support_bias && dst->ctype() == BSHD && dst->aggregatedTensors().empty()) {
 #pragma omp parallel for collapse(3) num_threads(thread_count)

@@ -73,7 +73,7 @@ struct MobileBertConfig : public TransformerConfig {
     int max_position_embeddings = 512;
     int num_attention_heads = 4;
     int num_hidden_layers = 24;
-    int num_classes = 2;
+    int num_classes = 10;
     int vocab_size = 30522;
 
     MobileBertNameConfig names_config;

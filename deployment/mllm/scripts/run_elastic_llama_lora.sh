@@ -10,16 +10,22 @@ adb -H host.docker.internal push ../vocab/orca_vocab.mllm /data/local/tmp/mllm/v
 adb -H host.docker.internal push ../bin-arm/demo_elastic_llama_lora /data/local/tmp/mllm/bin/
 # adb -H host.docker.internal push ../models/orca_mini_3b-fp16.mllm /data/local/tmp/mllm/models/
 
-if ! adb -H host.docker.internal shell [ -f "/data/local/tmp/mllm/models/orca_mini_3b-fp16.mllm" ]; then
-    adb -H host.docker.internal push ../models/orca_mini_3b-fp16.mllm /data/local/tmp/mllm/models/
+if ! adb -H host.docker.internal shell [ -f "/data/local/tmp/mllm/models/orca_mini_3b_elasticized-fp16.mllm" ]; then
+    adb -H host.docker.internal push ../models/orca_mini_3b_elasticized-fp16.mllm /data/local/tmp/mllm/models/
 else
-    echo "orca_mini_3b-fp16 file already exists"
+    echo "orca_mini_3b_elasticized-fp16 file already exists"
 fi
 
 if ! adb -H host.docker.internal shell [ -f "/data/local/tmp/mllm/models/orca_mini_3b-fp16-loras-fp32.mllm" ]; then
     adb -H host.docker.internal push ../models/orca_mini_3b-fp16-loras-fp32.mllm /data/local/tmp/mllm/models/
 else
     echo "orca_mini_3b-fp16-loras-fp32 file already exists"
+fi
+
+if ! adb -H host.docker.internal shell [ -f "/data/local/tmp/mllm/models/tlm_dualhead_fp32.mllm" ]; then
+    adb -H host.docker.internal push ../models/tlm_dualhead_fp32.mllm /data/local/tmp/mllm/models/
+else
+    echo "mobilebert-uncased-fp32 file already exists"
 fi
 
 # if push failed, exit
@@ -29,5 +35,5 @@ if [ $? -ne 0 ]; then
 fi
 #adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./main_llama"
 # echo "EXECUTION START"
-adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./demo_elastic_llama_lora -m ../models/orca_mini_3b-fp16.mllm -a ../models/orca_mini_3b-fp16-loras-fp32.mllm -v ../vocab/orca_vocab.mllm -t 1 -l 214"
+adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./demo_elastic_llama_lora -m ../models/orca_mini_3b_elasticized-fp16.mllm -a ../models/orca_mini_3b-fp16-loras-fp32.mllm -k ../models/tlm_dualhead_fp32.mllm -s ../vocab/gte_vocab.mllm -v ../vocab/orca_vocab.mllm -t 4 -l 1024"
 # adb -H host.docker.internal shell "cd /data/local/tmp/mllm/bin && ./demo_elastic_llama -m ../models/orca_mini_3b-fp16.mllm -v ../vocab/orca_vocab.mllm -r 0.8"

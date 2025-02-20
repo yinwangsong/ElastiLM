@@ -40,6 +40,7 @@ ErrorCode CPUElasticLinearWithLoRA::reshape(vector<shared_ptr<Tensor>> inputs, v
     assert(inputs[0]->head() == 1);
     assert(in_dimension == inputs[0]->dimension());
     outputs[0]->reshape(inputs[0]->batch(), inputs[0]->head(), inputs[0]->sequence(), out_dimension);
+    // std::cout<<activate_output_dim<<std::endl;
     // std::cout<<outputs[0].get()->dtype()<<" is after-reshape \n";
     return Op::reshape(inputs, outputs);
 }
@@ -56,8 +57,17 @@ ErrorCode CPUElasticLinearWithLoRA::execute(vector<shared_ptr<Tensor>> inputs, v
 
     if (weight_.dtype() == MLLM_TYPE_F16) {
         // std::cout << name() << "  mm1" << std::endl;
+        // if (name().find("gate_proj") != std::string::npos) {
+        //     outputs[0].get()->printDataTorchLike<float>();
+        //     inputs[0].get()->printDataTorchLike<float>();
+        // }
+        // inputs[0].get()->printDataTorchLike<float>();
         mat_mul(inputs[0].get(), &loras_a_[Elastilm::LEVEL], &Elastilm::inner_rank_buffer, false, nullptr, false, true, thread_count);
+        // if (name().find("gate_proj") != std::string::npos)
+        //     outputs[0].get()->printDataTorchLike<float>();
         // Elastilm::inner_rank_buffer.printDataTorchLike<float>();
+        // if (name().find("model.layers.anchor.3.self_attn.q_proj_lora_a_level_8") != std::string::npos)
+        // loras_a_[Elastilm::LEVEL].printDataTorchLike<float>();
         // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
         //     exit(-1);
         // }
@@ -65,7 +75,9 @@ ErrorCode CPUElasticLinearWithLoRA::execute(vector<shared_ptr<Tensor>> inputs, v
         // loras_b_[Elastilm::LEVEL].printDataTorchLike<float>();
 
         mat_mul(&Elastilm::inner_rank_buffer, &loras_b_[Elastilm::LEVEL], outputs[0].get(), false, nullptr, false, true, thread_count);
-
+        // if (name().find("gate_proj") != std::string::npos)
+        //     outputs[0].get()->printDataTorchLike<float>();
+        // outputs[0].get()->printDataTorchLike<float>();
 
         // matmul does not need to clear the buffer C
         // std::memset(outputs[0].get()->ptrAt<float>(0, 0, 0, 0), 0, 4*outputs[0].get()->count());
@@ -73,7 +85,8 @@ ErrorCode CPUElasticLinearWithLoRA::execute(vector<shared_ptr<Tensor>> inputs, v
         // std::cout<<outputs[0].get()->count()<<std::endl;
         // mllm_mul_fp32(outputs[0].get()->ptrAt<float>(0, 0, 0, 0), Elastilm::submodel_lora_scale, outputs[0].get()->ptrAt<float>(0, 0, 0, 0), outputs[0].get()->count());
 
-        // outputs[0].get()->printDataTorchLike<float>();
+        // if (name().find("gate_proj") != std::string::npos)
+        //     outputs[0].get()->printDataTorchLike<float>();
 
         for (int b = 0; b < outputs[0].get()->batch(); b++){
             for (int h = 0; h < outputs[0].get()->head(); h++){
@@ -140,6 +153,7 @@ ErrorCode CPUElasticLinearWithLoRA::load(AbstructLoader &loader) {
             if (weight_.name().find("q_proj") != std::string::npos || weight_.name().find("k_proj") != std::string::npos || weight_.name().find("v_proj") != std::string::npos) {
                 in_features_lora = in_features_;
                 out_features_lora = Elastilm::submodel_attn_hidden_dims[i][Elastilm::IS_ANCHOR_LAYER];
+                // std::cout<<out_features_lora<<std::endl;
             }
             if (weight_.name().find("o_proj") != std::string::npos) {
                 in_features_lora = Elastilm::submodel_attn_hidden_dims[i][Elastilm::IS_ANCHOR_LAYER];;

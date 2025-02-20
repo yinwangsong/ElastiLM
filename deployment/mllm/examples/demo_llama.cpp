@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     // LLaMAConfig config(tokens_limit, "7B", HFHUBROPE);
     LLaMAConfig config(tokens_limit, "3B", HFHUBROPE);
     auto model = LLaMAModel(config);
-    model.load(model_path);
+    // model.load(model_path);
 
     vector<string> in_strs = {
         // "Hello, who are you?",
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
         // }
         Tensor input_tensor = LLaMATokenizer::tokens2Input(x);
         input_tensor.printData<float>();
-        for (int step = 0; step < 1; step++) {
+        for (int step = 0; step < 2; step++) {
             auto result = model({input_tensor});
             result[0].printDataTorchLike<float>();
             auto [out_string, out_token] = tokenizer.detokenize(result[0]);

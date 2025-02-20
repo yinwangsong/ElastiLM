@@ -15,6 +15,7 @@ using std::function;
 #include <vector>
 #include <set>
 #include <Tensor.hpp>
+#include <backends/cpu/compute/VecDot.hpp>
 
 namespace Elastilm {
 
@@ -146,10 +147,23 @@ public:
         std::cout << "only for KVCache" << std::endl;
         return -1;
     }
+    virtual void revertCache(int pos) {
+        assert(type_ == OpType::KVCACHE || type_ == OpType::KVCACHENPU || type_ == OpType::IROPE || type_ == OpType::ROPE);
+        std::cout << "only for KVCache" << std::endl;
+    };
     virtual void clearCache() {
         assert(type_ == OpType::KVCACHE || type_ == OpType::KVCACHENPU || type_ == OpType::IROPE || type_ == OpType::ROPE);
         std::cout << "only for KVCache" << std::endl;
     }
+
+    // virtual Tensor &weight() {
+    //     assert(type_ == OpType::LINEAR);
+    //     std::cout << "only for Linear now" << std::endl;
+    // }
+    // virtual Tensor &bias() {
+    //     assert(type_ == OpType::LINEAR);
+    //     std::cout << "only for Linear now" << std::endl;
+    // }
 
     static DataType &noLoadWeightsDtype() {
         return no_load_weights_dtype_;

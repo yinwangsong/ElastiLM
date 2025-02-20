@@ -1,5 +1,5 @@
-#ifndef MODELING_MOBILEBERT_HPP
-#define MODELING_MOBILEBERT_HPP
+#ifndef MODELING_DUAL_HEAD_TLM_HPP
+#define MODELING_DUAL_HEAD_TLM_HPP
 
 #include "Backend.hpp"
 #include "Layer.hpp"
@@ -75,30 +75,30 @@ class MobileBertSelfAttention : public Module {
             // inputs[1].printDataTorchLike<float>();
             
             Tensor q = query_proj(inputs[0]);
+            // q.printDataTorchLike<float>();
             Tensor k = key_proj(inputs[1]);
             // k.printDataTorchLike<float>();
+            Elastilm::is_v_proj = true;
             Tensor v = value_proj(inputs[2]);
-
+            Elastilm::is_v_proj = false;
+            // v.printDataTorchLike<float>();
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     exit(1);
+        // }
             q = q.view(-1, num_attention_heads, -1, attention_head_size);
             k = k.view(-1, num_attention_heads, -1, attention_head_size);
             v = v.view(-1, num_attention_heads, -1, attention_head_size);
             // q.printDataTorchLike<float>();
             // k.printDataTorchLike<float>();
-            // std::cout<<q.ctype()<<" "<<k.ctype()<<" "<<v.ctype()<<" ";
             k = k.transpose(SEQUENCE, DIMENSION);
             Tensor attention_scores = Tensor::mm(q, k);
-
             // attention_scores.printDataTorchLike<float>();
             attention_scores = attention_scores / std::sqrt(attention_head_size);
             // attention_scores.printDataTorchLike<float>();
             attention_scores = softmax(attention_scores);
-            
-            // attention_scores.printDataTorchLike<float>();
-            // v.printDataTorchLike<float>();
             Tensor o = Tensor::mm(attention_scores, v);
 
             o = o.view(-1, 1, -1, all_head_size);
-
             return {o};       
         }
 
@@ -113,7 +113,6 @@ class MobileBertSelfAttention : public Module {
         Layer softmax;
 };
 
-
 class MobileBertSelfOutput : public Module {
     public:
         MobileBertSelfOutput() = default;
@@ -123,14 +122,8 @@ class MobileBertSelfOutput : public Module {
             layer_norm = NoNorm(config.true_hidden_size, true,  base_name + config.names_config._layer_norm_name);
         }
         std::vector<Tensor> Forward(std::vector<Tensor> inputs, std::vector<std::any> args) override {
-            // inputs[0].printDataTorchLike<float>();
             Tensor layer_outputs = dense(inputs[0]);
-            // layer_outputs.printDataTorchLike<float>();
             layer_outputs = layer_norm(layer_outputs + inputs[1]);
-            // layer_outputs.printDataTorchLike<float>();
-            // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
-            //     exit(1);
-            // }
             return {layer_outputs};
         }
     private:
@@ -149,10 +142,6 @@ class MobileBertAttention : public Module {
         std::vector<Tensor> Forward(std::vector<Tensor> inputs, std::vector<std::any> args) override {
             std::vector<Tensor> self_outputs = self({inputs[0], inputs[1], inputs[2]});
             std::vector<Tensor> attention_output = output({self_outputs[0], inputs[3]});
-            // attention_output[0].printDataTorchLike<float>();
-            // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
-            //     exit(1);
-            // }
             return attention_output;
         }
 
@@ -171,13 +160,7 @@ class MobileBertIntermediate : public Module {
         std::vector<Tensor> Forward(std::vector<Tensor> inputs, std::vector<std::any> args) override {
             Tensor hidden_states = inputs[0];
             hidden_states = dense(hidden_states);
-            // dense.get_op()->weight().printDataTorchLike<mllm_fp16_t>();
-            // hidden_states.printDataTorchLike<float>();
             hidden_states = intermediate_act_fn(hidden_states);
-            // hidden_states.printDataTorchLike<float>();
-            // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
-            //     exit(1);
-            // }
             return {hidden_states};
         }
     private:
@@ -324,13 +307,8 @@ public:
         Tensor attention_output = self_attention_outputs[0];
         // attention_output.printDataTorchLike<float>();
         for(FFNLayer& ffn_module: ffn){
-            // attention_output.printDataTorchLike<float>();
             attention_output = ffn_module({attention_output})[0];
         }
-        // attention_output.printDataTorchLike<float>();
-        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
-        //     exit(1);
-        // }
         std::vector<Tensor> intermediate_output = intermediate({attention_output});
         std::vector<Tensor> layer_output = output({intermediate_output[0], attention_output, hidden_states});
 
@@ -351,7 +329,9 @@ class MobileBertEncoder : public Module {
 public:
     MobileBertEncoder() = default;
     MobileBertEncoder(MobileBertConfig &config, const string &base_name) {
-        layer = List<MobileBertLayer>(config.num_hidden_layers, config,  base_name + config.names_config.layer_module);
+        layer_decision_head = List<MobileBertLayer>(int(config.num_hidden_layers / 2), config,  base_name + config.names_config.layer_module + "decision.");
+        layer_score_head = List<MobileBertLayer>(int(config.num_hidden_layers / 2), config,  base_name + config.names_config.layer_module + "score.");
+        layer = List<MobileBertLayer>(int(config.num_hidden_layers / 2), config,  base_name + config.names_config.layer_module);
     }
     std::vector<Tensor> Forward(std::vector<Tensor> inputs, std::vector<std::any> args) override {
         Tensor hidden_states = inputs[0];
@@ -359,12 +339,31 @@ public:
             std::vector<Tensor> layer_outputs = layer_module({hidden_states});
             hidden_states = layer_outputs[0];
             // hidden_states.printDataTorchLike<float>();
-    // std::cout << mllm::physical_memory_used_by_process()/1024 << "MB" <<std::endl;
-    // std::cout << mllm::virtual_memory_used_by_process()/1024 << "MB" <<std::endl;
+            // std::cout << mllm::physical_memory_used_by_process()/1024 << "MB" <<std::endl;
+            // std::cout << mllm::virtual_memory_used_by_process()/1024 << "MB" <<std::endl;
         }
-        return {hidden_states};
+        // hidden_states.printDataTorchLike<float>();
+        Tensor hidden_states_score = hidden_states;
+        for(MobileBertLayer& layer_module : layer_score_head){
+            std::vector<Tensor> layer_outputs = layer_module({hidden_states_score});
+            hidden_states_score = layer_outputs[0];
+            // hidden_states_score.printDataTorchLike<float>();
+            // std::cout << mllm::physical_memory_used_by_process()/1024 << "MB" <<std::endl;
+            // std::cout << mllm::virtual_memory_used_by_process()/1024 << "MB" <<std::endl;
+        }
+        Tensor hidden_states_decision = hidden_states;
+        for(MobileBertLayer& layer_module : layer_decision_head){
+            std::vector<Tensor> layer_outputs = layer_module({hidden_states_decision});
+            hidden_states_decision = layer_outputs[0];
+            // hidden_states_decision.printDataTorchLike<float>();
+            // std::cout << mllm::physical_memory_used_by_process()/1024 << "MB" <<std::endl;
+            // std::cout << mllm::virtual_memory_used_by_process()/1024 << "MB" <<std::endl;
+        }
+        return {hidden_states_decision, hidden_states_score};
     }
 private:
+    std::vector<MobileBertLayer> layer_decision_head;
+    std::vector<MobileBertLayer> layer_score_head;
     std::vector<MobileBertLayer> layer;
 };
 
@@ -381,8 +380,8 @@ public:
 class MobileBertHead : public Module {
 public:
     MobileBertHead() = default;
-    MobileBertHead(MobileBertConfig &config, const string &base_name) {
-        head = Linear(config.hidden_size, config.num_classes, true, base_name + config.names_config._head_name);
+    MobileBertHead(MobileBertConfig &config, const int num_classes, const string &base_name) {
+        head = Linear(config.hidden_size, num_classes, true, base_name + config.names_config._head_name);
     }
     std::vector<Tensor> Forward(std::vector<Tensor> inputs, std::vector<std::any> args) override {
         Tensor x = head(inputs[0]);
@@ -399,23 +398,35 @@ public:
         embeddings = MobileBertEmbeddings(config, config.names_config.embedding_module);
         encoder = MobileBertEncoder(config, config.names_config.encoder_module);
         pooler = MobileBertPooler();
-        head = MobileBertHead(config, config.names_config.head_module);
+        decision_head_prompt = MobileBertHead(config, config.num_classes, config.names_config.head_module+"decision_prompt_");
+        decision_head_model = MobileBertHead(config, Elastilm::SUBMODEL_NUM, config.names_config.head_module+"decision_model_");
+        score_head = MobileBertHead(config, 2, config.names_config.head_module+"score_");
     }
 
     std::vector<Tensor> Forward(std::vector<Tensor> inputs, std::vector<std::any> args) override {
+        // inputs[0].printDataTorchLike<float>();
         auto x = embeddings(inputs)[0];
-        // x.printDataTorchLike<float>();
-        x = encoder({x})[0];
-        // x = pooler({x})[0];
-        x = head({x})[0];
-        return {x};
+        auto encoder_out = encoder({x});
+        Tensor decision_head_out = encoder_out[0];
+        // decision_head_out.printDataTorchLike<float>();
+        Tensor score_head_out = encoder_out[1];
+        decision_head_out = pooler({decision_head_out})[0];
+        Tensor decision_head_out_prompt = decision_head_prompt({decision_head_out})[0];
+        Tensor decision_head_out_model = decision_head_model({decision_head_out})[0];
+        score_head_out = score_head({score_head_out})[0];
+        // decision_head_out_prompt.printDataTorchLike<float>();
+
+        // score_head_out.printDataTorchLike<float>();
+        return {score_head_out, decision_head_out_prompt, decision_head_out_model};
     }
 
 private:
     MobileBertEmbeddings embeddings;
     MobileBertEncoder encoder;
     MobileBertPooler pooler;
-    MobileBertHead head;
+    MobileBertHead decision_head_prompt;
+    MobileBertHead decision_head_model;
+    MobileBertHead score_head;
 };
 
-#endif //! MODELING_MOBILEBERT_HPP
+#endif //! MODELING_DUAL_HEAD_TLM_HPP

@@ -137,10 +137,18 @@ std::vector<std::wstring> splitBySet(const std::wstring& text, const std::unorde
         }
     }
 
+    // for (auto res : result) {
+    //     std::wcout<<"[]"<<res<<std::endl;
+    // }
+
     return result;
 }
 
 std::vector<std::wstring> mllm::BasicTokenizer::tokenize(const std::wstring& text) {
+    // for (auto i : never_split) {
+    //     std::wcout<<i<<"\n";
+    // }
+
     std::wstring cleaned = clean_text(text);
     if (_tokenize_chinese_chars)
         cleaned = tokenize_chinese_chars(cleaned);
@@ -191,6 +199,7 @@ void mllm::WordPieceTokenizer::tokenize(const string &text, vector<token_id_t> &
     for (const auto& token : basic_tokens) {
         int start = 0;
         while(start < token.size()) {
+            // std::cout<<token.size()<<" ";
             auto end = token.size();
             string str;
             while(start < end){
@@ -218,13 +227,21 @@ void mllm::WordPieceTokenizer::tokenize(const string &text, vector<token_id_t> &
     }
 
     for (const auto& token_str : token_strs) {
-//        std::cout << "token: " << token_str << std::endl;
+        // std::cout << "token: " << token_str << std::endl;
         tokens.push_back(vocab_map_[token_str]);
     }
 }
+
 void mllm::WordPieceTokenizer::add_special_tokens(const vector<std::string> &special_tokens) {
     // add never split tokens to basic tokenizer
     for (const auto& token : special_tokens) {
         basic_tokenizer.add_never_split(utf8_to_wstring(token));
+    }
+}
+
+void mllm::WordPieceTokenizer::add_special_tokens_into_vocab(const vector<std::string> &special_tokens) {
+    for (const auto& token : special_tokens) {
+        basic_tokenizer.add_never_split(utf8_to_wstring(token));
+        vocab_map_[token] = vocab_map_.size();
     }
 }

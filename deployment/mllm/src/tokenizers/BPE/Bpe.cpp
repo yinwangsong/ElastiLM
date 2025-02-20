@@ -113,6 +113,7 @@ void mllm::BPETokenizer::tokenize(const std::string &text, std::vector<token_id_
         MLLM_LOG_ERROR_STREAM << "The vocab map is empty!" << std::endl;
         return;
     }
+    // std::cout<<text<<"\n";
     symbols_.clear();
     while (!queue_.empty()) queue_.pop();
     size_t offset = 0;

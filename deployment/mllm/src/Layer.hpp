@@ -100,6 +100,10 @@ public:
         loaded_param = false;
     }
 
+    Op* get_op() {
+        return op_;
+    }
+
 private:
     std::string name_num_to_X(const std::string &input_string) {
         std::regex pattern(R"(\.\d{1,3}\.)"); // Matches any number between 1 and 100 between two dots
@@ -674,6 +678,9 @@ public:
         auto ts = run({input}, 1);
         return ts[0].get();
     }
+    void revertCache(int pos) {
+        return op_->revertCache(pos);
+    }
     void clearCache() {
         return op_->clearCache();
     }
@@ -745,6 +752,9 @@ public:
     }
     int getCacheSeqLen() {
         return op_->getCacheSeqLen();
+    }
+    void revertCache(int pos) {
+        return op_->revertCache(pos);
     }
     void clearCache() {
         // std::cout<<"clearCache\n";

@@ -47,7 +47,7 @@ public:
         if (cache_limit > 0) {
             k_cache = KVCache(head_size / kv_head_size, cache_limit, base_name + "k_cache");
             v_cache = KVCache(head_size / kv_head_size, cache_limit, base_name + "v_cache");
-            std::cout<<Elastilm::CUR_LAYER_ID<<"\n";
+            // std::cout<<Elastilm::CUR_LAYER_ID<<"\n";
             Elastilm::CUR_LAYER_ID+=1;
         }
         softmax = Softmax(DIMENSION, do_mask, base_name + "softmax");
@@ -64,8 +64,11 @@ public:
         k = k_proj(inputs[1], -1, activate_head_dim * attn_hidden_dim_);
         v = v_proj(inputs[2], -1, activate_head_dim * attn_hidden_dim_);
 
-        // v.printDataTorchLike<float>();
-
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     q.printDataTorchLike<float>();
+        //     k.printDataTorchLike<float>();
+        //     v.printDataTorchLike<float>();
+        // }
         // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
         //     exit(-1);
         // }
@@ -82,15 +85,32 @@ public:
         }
         k = k.transpose(SEQUENCE, DIMENSION);
         auto qk = Tensor::mm(q, k);
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     qk.printDataTorchLike<float>();
+        // }
         qk = qk / std::sqrt(attn_hidden_dim_); // attn_hidden_dim_
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     qk.printDataTorchLike<float>();
+        // }
         if (k_cache.ready() && v_cache.ready()) {
             qk = softmax(qk, k_cache.getCacheSeqLen());
         } else {
             qk = softmax(qk);
         }
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     qk.printDataTorchLike<float>();
+        // }
         auto o = Tensor::mm(qk, v);
         o = o.view(-1, 1, -1, attn_hidden_dim_ * activate_head_dim);
         o = o_proj(o, activate_head_dim * attn_hidden_dim_, -1);
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     o.printDataTorchLike<float>();
+        // }
+
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     inputs[0].printDataTorchLike<float>();
+        // }
+        // printActivations<float>();
         return {o};
     }
     vector<KVCache *> get_cache() {
@@ -118,11 +138,27 @@ public:
     vector<Tensor> Forward(vector<Tensor> inputs, vector<std::any> args) override {
         vector<int> activate_dims = std::any_cast<vector<int>>(args[0]);
         int activate_dim = activate_dims[0];
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     inputs[0].printDataTorchLike<float>();
+        // }
         auto x = gate_proj(inputs[0], -1, activate_dim);
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     std::cout<<123123<<std::endl;
+        //     x.printDataTorchLike<float>();
+        // }
         x = silu(x);
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     x.printDataTorchLike<float>();
+        // }
         auto y = up_proj(inputs[0], -1, activate_dim);
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     y.printDataTorchLike<float>();
+        // }
         x = x * y;
         x = down_proj(x, activate_dim, -1);
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     y.printDataTorchLike<float>();
+        // }
         return {x};
     }
 };
@@ -146,10 +182,22 @@ public:
         vector<int> activate_dims = std::any_cast<vector<int>>(args[0]);
         vector<int> dim_attns = {activate_dims[0]};
         vector<int> dim_mlps = {activate_dims[1]};
+        // inputs[0].printDataTorchLike<float>();
+        // Tensor input_raw = inputs[0];
         auto x = norm1(inputs[0]);
+        // inputs[0].printDataTorchLike<float>();
         x = attention({x, x, x}, dim_attns)[0];
+        // attention.printActivations<float>();
+        // x.printDataTorchLike<float>();
+        // std::cout<<123<<std::endl;
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+        //     inputs[0].printData0<float>();
+        // }
+        // inputs[0].printDataTorchLike<float>();
         auto tmp = x + inputs[0];
+        // tmp.printDataTorchLike<float>();
         x = norm2(tmp);
+        // x.printDataTorchLike<float>();
         x = mlp({x}, dim_mlps)[0];
         x = x + tmp;
         return {x};
@@ -186,16 +234,24 @@ public:
         assert(activate_dims.size() == num_layer_size);
         auto x = embedding(inputs[0]);
 
+        // x.printDataTorchLike<float>();
         int cur_block = 0;
         int cur_anchor_block = 0;
         for (int id = 0; id < blocks.size() + blocks_anchor.size(); id++) {
+            // std::cout<<id<<std::endl;
             if(Elastilm::anchor_layers.find(id) != Elastilm::anchor_layers.end()) {
                 Elastilm::IS_ANCHOR_LAYER = 1;
                 x = blocks_anchor[cur_anchor_block]({x}, activate_dims[id])[0];
+                // if (Tensor::tensor_status == TENSOR_STATIC_READY) {
+                //     x.printDataTorchLike<float>();
+                //     exit(-1);
+                // }
                 cur_anchor_block += 1;
             } else {
                 Elastilm::IS_ANCHOR_LAYER = 0;
+                // x.printDataTorchLike<float>();
                 x = blocks[cur_block]({x}, activate_dims[id])[0];
+                // x.printDataTorchLike<float>();
                 cur_block += 1;
             }
             // x.printDataTorchLike<float>();
@@ -203,9 +259,28 @@ public:
             //     exit(-1);
             // }
         }
+        // std::cout<<123<<std::endl;
         x = norm(x);
         x = lm_head(x);
         return {x};
+    }
+
+    void revert_kvcache_to_pos(int pos) {
+
+        for (auto &block : blocks) {
+            auto kvcache = block.get_attention().get_cache();
+            for (auto &cache : kvcache) { cache->revertCache(pos); }
+            auto ropes = block.get_attention().get_rope();
+            for (auto &rope : ropes) { rope->revertCache(pos); }
+        }
+
+        for (auto &block : blocks_anchor) {
+            auto kvcache = block.get_attention().get_cache();
+            for (auto &cache : kvcache) { cache->revertCache(pos); }
+            auto ropes = block.get_attention().get_rope();
+            for (auto &rope : ropes) { rope->revertCache(pos); }
+        }
+
     }
 
     void clear_kvcache() override {

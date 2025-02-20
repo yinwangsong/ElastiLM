@@ -35,7 +35,20 @@ public:
             tokens2Input(position_ids, "input_position_ids"),
             tokens2Input(tokens_type, "input_tokens_type")};
     }
-
+    std::pair<std::string, unsigned> detokenize(Tensor &result) override {
+        assert(result.batch() == 1);
+        assert(result.head() == 1);
+        vector<float> scores;
+        for (int i = 0; i < result.dimension(); ++i) {
+            auto value = result.dataAt<float>(0, 0, result.sequence() - 1, i);
+            scores.push_back(value);
+        }
+        auto token_idx = argmax(scores);
+        return {WordPieceTokenizer::detokenize({token_idx}), token_idx};
+    }
+    std::string detokenize(const std::vector<token_id_t> &tokens) override {
+        return WordPieceTokenizer::detokenize(tokens);
+    }
 private:
     bool _add_special_tokens;
 };

@@ -27,6 +27,11 @@ public:
         cache_seq_len_ = -1;
     }
 
+    void revertCache(int pos) override {
+        cache_seq_len_ = pos;
+    }
+
+
     void setForXnn(bool for_xnn) {
         for_xnn_ = for_xnn;
     }

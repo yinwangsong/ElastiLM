@@ -79,7 +79,8 @@ public:
         k = k.transpose(SEQUENCE, DIMENSION);
         auto qk = Tensor::mm(q, k);
         qk = qk / std::sqrt(attn_hidden_dim_); // attn_hidden_dim_
-       
+        // if (Tensor::tensor_status == TENSOR_STATIC_READY)
+        //     std::cout<<q.ctype()<<" "<<k.ctype()<<" "<<v.ctype()<<" "<<qk.ctype()<<"\n";
         if (k_cache.ready() && v_cache.ready()) {
             qk = softmax(qk, k_cache.getCacheSeqLen());
         } else {

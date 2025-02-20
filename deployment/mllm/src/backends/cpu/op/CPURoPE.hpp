@@ -44,6 +44,9 @@ private:
     void rope_hf(shared_ptr<Tensor> input, shared_ptr<Tensor> output);
     void rope_permission(shared_ptr<Tensor> input, shared_ptr<Tensor> output);
     void rope_mla(shared_ptr<Tensor> input, shared_ptr<Tensor> output);
+    void revertCache(int pos) override {
+        h_cnt_ = pos;
+    }
     void clearCache() override {
         h_cnt_ = 0;
     }

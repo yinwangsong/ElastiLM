@@ -1111,9 +1111,9 @@ bool check_llamafile_sgemm(int64_t m, int64_t n, int64_t k, DataType Atype, Data
         return false;
     if (ldb < k)
         return false;
-    if (ldc < m)
+    if (ldc < m){
         return false;
-
+    }
     if (Ctype != MLLM_TYPE_F32)
         return false;
 

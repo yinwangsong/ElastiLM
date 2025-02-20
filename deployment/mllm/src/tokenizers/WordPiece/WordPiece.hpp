@@ -57,8 +57,8 @@ public:
 
     WordPieceTokenizer(const std::string &vocab_file);
     void tokenize(const std::string &text, std::vector<token_id_t> &tokens, bool bos) override;
-
     void add_special_tokens(const std::vector<std::string> &special_tokens);
+    void add_special_tokens_into_vocab(const vector<std::string> &special_tokens);
 };
 
 }

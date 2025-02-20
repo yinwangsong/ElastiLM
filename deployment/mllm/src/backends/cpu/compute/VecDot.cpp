@@ -27,6 +27,11 @@
 
 #include "VecDot.hpp"
 
+namespace Elastilm {
+
+    bool is_v_proj = false;
+};
+
 #ifdef __AVX2__
 static void vec_dot_fp32_avx2(const int n, float *__restrict s, const float *__restrict x, const float *__restrict y) {
     float sumf = 0.0F;

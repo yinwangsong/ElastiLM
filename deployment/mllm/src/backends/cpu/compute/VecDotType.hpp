@@ -31,6 +31,9 @@
 #define MLLM_RESTRICT __restrict
 #include "Types.hpp"
 
+
+
+
 typedef void (*mllm_to_float_func)(const void *src, float *dst, const int n); // from src type to float(stored in dst)  n is the number of element in src
 typedef void (*mllm_from_float_func)(const float *src, void *dst, const int n);
 typedef void (*mllm_vec_dot_func)(const int n, float *MLLM_RESTRICT dst, const void *MLLM_RESTRICT x, const void *MLLM_RESTRICT y);
