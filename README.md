@@ -70,6 +70,6 @@ Replace the `adb -H host.docker.internal` to `adb` when you are not using docker
 
 ### Demo video
 
-## Comming soon
+## Coming soon
 
 ## Acknowledgement
