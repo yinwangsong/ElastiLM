@@ -113,10 +113,16 @@ Here is a demo video that is run on device via [Termux](https://play.google.com/
 
 
 <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
-    <video width="320" height="240" controls>
-        <source src="https://github.com/user-attachments/assets/33ce728b-c26f-42cd-bf2c-808d1ec94e6a" type="video/mp4">
-        您的浏览器不支持Video标签。
-    </video>
+<table>
+    <tr>
+        <td>
+            <video src="https://github.com/user-attachments/assets/33ce728b-c26f-42cd-bf2c-808d1ec94e6a">
+        </td>
+    </tr>
+    <tr>
+        <td>On MI14</td>
+    </tr>    
+</table>
 </div>
 
 
