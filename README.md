@@ -109,7 +109,11 @@ prefill SLO (20%, 30%, ..., 100%):
 
 ### Demo video
 
-Here is a demo video that is run on device via [Termux]().
+Here is a demo video that is run on device via [Termux](https://play.google.com/store/apps/details?id=com.termux&pli=1).
+
+<video width="320" height="240" controls>
+  <source src="assets/demo.mp4" type="video/mp4">
+</video>
 
 ## Artifact evaluation
 
