@@ -120,7 +120,7 @@ Here is a demo video that is run on device via [Termux](https://play.google.com/
         </td>
     </tr>
     <tr>
-        <td>On MI14</td>
+        <td align="center">Demo on MI14</td>
     </tr>    
 </table>
 </div>
