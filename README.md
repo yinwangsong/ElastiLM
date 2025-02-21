@@ -112,7 +112,7 @@ prefill SLO (20%, 30%, ..., 100%):
 Here is a demo video that is run on device via [Termux](https://play.google.com/store/apps/details?id=com.termux&pli=1).
 
 
-<div style="display: flex; justify-content: center;">
+<div align="center">
 <table>
     <tr>
         <td>
