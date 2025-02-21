@@ -274,7 +274,9 @@ int main(int argc, char **argv) {
         // std::cout<<tlm_text<<std::endl;
         vector<Tensor> tlm_input = tlm_tokenizer.tokenizes(tlm_text);
         // tlm_input[0].printDataTorchLike<float>();
+        clock_t start = time_ms();
         vector<Tensor> tlm_output = tlm(tlm_input);
+        clock_t end = time_ms();
         Tensor token_scores_tensor = tlm_output[0];
         Tensor prompt_ratio_tensor = tlm_output[1];
         Tensor model_ratio_tensor = tlm_output[2];
@@ -400,6 +402,7 @@ int main(int argc, char **argv) {
 
         float pred = 0.0f;
         double prefill_time_spent = 0.0;
+        prefill_time_spent += end - start;
         double decode_time_spent = 0.0;
         int decode_token_nums = 0;
         std::cout << "prefilling...";
