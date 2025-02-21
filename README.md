@@ -130,4 +130,10 @@ Here is a demo video that is run on device via [Termux](https://play.google.com/
 
 ## Coming soon
 
+- System service binding APIs.
+- NPU support.
+- ...
+
 ## Acknowledgement
+
+[`HF Transformers`](https://github.com/huggingface/transformers) [`LLMPruner`](https://github.com/horseee/LLM-Pruner) [`mllm`](https://github.com/UbiquitousLearning/mllm)
