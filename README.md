@@ -112,14 +112,42 @@ prefill SLO (20%, 30%, ..., 100%):
 Here is a demo video that is run on device via [Termux](https://play.google.com/store/apps/details?id=com.termux&pli=1).
 
 
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    table {
+        margin: auto; /* 表格水平居中 */
+        width: 50%;   /* 根据需要调整宽度 */
+        border-collapse: collapse; /* 可选：合并边框 */
+    }
+    td {
+        text-align: center; /* 文本和内容居中 */
+        vertical-align: middle; /* 垂直居中 */
+    }
+    video {
+        max-width: 100%; /* 视频宽度适应单元格大小 */
+        height: auto; /* 保持视频比例 */
+    }
+</style>
+</head>
+<body>
+
 <table>
     <tr>
-        <td>  <video src="https://github.com/user-attachments/assets/33ce728b-c26f-42cd-bf2c-808d1ec94e6a"> </td>
+        <td>  
+            <video controls src="https://github.com/user-attachments/assets/33ce728b-c26f-42cd-bf2c-808d1ec94e6a">
+                您的浏览器不支持 video 标签。
+            </video>
+        </td>
     </tr>
     <tr>
         <td>On MI14</td>
     </tr>
 </table>
+
+</body>
+</html>
 
 
 ## Artifact evaluation
