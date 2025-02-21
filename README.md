@@ -76,7 +76,7 @@ The compiled binary file `demo_elastic_llama_lora` will be located in `deplyment
 
 ### Model preparation
 
-We pre-uploaded an elasticized [`oraca_mini_3b` model]() with the corresponding fine-tuned LoRA weights and the tiny language model on [Google Drive]().
+We pre-uploaded an elasticized [`oraca_mini_3b` model](https://huggingface.co/pankajmathur/orca_mini_3b) with the corresponding fine-tuned LoRA weights and the tiny language model on [Google Drive](https://drive.google.com/drive/folders/1RAKabZHfubIXmpzFMqDaGv7ki5SjXjSi?usp=sharing).
 
 Please download them and put them in `deplyment/mllm/models/` by
 
@@ -101,10 +101,15 @@ cd deployment/mllm/scripts
 If you have performed the aforementioned correctly, you will see 
 
 ```
-
+[Q] India is in the Northern Hemisphere and Australia is in the Southern Hemisphere. In June, it is summer in India and winter in Australia. What is the main reason the seasons are opposite in the two countries?
+prefill SLO (20%, 30%, ..., 100%): 
 ```
 
+. Set up the SLOs for each request by screen input.
+
 ### Demo video
+
+Here is a demo video that is run on device via [Termux]().
 
 ## Artifact evaluation
 

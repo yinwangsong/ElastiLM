@@ -408,9 +408,9 @@ int main(int argc, char **argv) {
         std::cout << "prefilling...";
 
         // do prefill
-        clock_t start = time_ms();
+        start = time_ms();
         auto result = model({input_tensor}, activate_dims);
-        clock_t end = time_ms();
+        end = time_ms();
 
         prefill_time_spent += (double)(end - start);
         // auto [out_string, out_token] = tokenizer.detokenize(result[0]);
