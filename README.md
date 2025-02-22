@@ -78,7 +78,7 @@ The compiled binary file `demo_elastic_llama_lora` will be located in `deplyment
 
 We pre-uploaded an elasticized [`oraca_mini_3b` model](https://huggingface.co/pankajmathur/orca_mini_3b) with the corresponding fine-tuned LoRA weights and the tiny language model on [Google Drive](https://drive.google.com/drive/folders/1RAKabZHfubIXmpzFMqDaGv7ki5SjXjSi?usp=sharing).
 
-Please download them and put them in `deplyment/mllm/models/` by
+Please download them and put them in `deployment/mllm/models/` by
 
 ```
 gdown <file-id>
