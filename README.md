@@ -24,7 +24,7 @@ ElastiLM
 |   |––...
 ```
 
-## Running
+## Running ElastiLM
 
 ### Hardware/software environment
 
