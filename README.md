@@ -26,6 +26,19 @@ ElastiLM
 
 ## Running
 
+### Hardware/software environment
+
+We mainly perform the expriments on a cloud linux server with 8$\times$ 45GB A40 GPUs.
+The software environment is
+```
+python=3.10.12
+torch==2.3.1
+datasets==2.19.1
+numpy==1.26.4
+tqdm==4.66.4
+wandb==0.17.0
+```
+
 ## On-device deployment
 
 We provide an on-device deployment demo of ElastiLM.
