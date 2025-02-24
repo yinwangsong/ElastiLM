@@ -65,15 +65,15 @@ def reorder_llama(model):
             pruned_indices = json.load(file)
 
         # reorder lora
-        lora = torch.load("/data/yinwangsong/ELASTICLLM/tune_log/llama_{pth}/adapter_model.bin".format(pth=prune_ratio))
+        lora = torch.load("./tune_log/llama_{pth}/adapter_model.bin".format(pth=prune_ratio))
 
         import scores, os
-        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama/llama_{pth}/imp.json".format(pth=prune_ratio)
+        directory = "./ELASTICLLM/imp/Ours/llama/llama_{pth}/imp.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             imps = json.load(file)
 
         import scores, os
-        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama/llama_{pth}/rank_pruned.json".format(pth=prune_ratio)
+        directory = "./ELASTICLLM/imp/Ours/llama/llama_{pth}/rank_pruned.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             pruned_indices = json.load(file)
 
@@ -245,7 +245,7 @@ def get_llama(model, ratio):
     
     # 准备mask
     import scores, os
-    directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama/llama_{pth}/rank_pruned.json".format(pth=prune_ratio)
+    directory = "./ELASTICLLM/imp/Ours/llama/llama_{pth}/rank_pruned.json".format(pth=prune_ratio)
     with open(directory, 'r') as file:
         pruned_indices = json.load(file)
 
