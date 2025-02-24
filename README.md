@@ -105,6 +105,20 @@ python3 ELASTICLLM/train_slm/llama3/train_mobilebert_decisionhead.py
 
 You will see `slm_scorehead.pt` and `slm_decisionhead_llama.pt` under the same directory.
 
+### (Optional) preparing for the baselines
+
+Profiling contextual sparsity.
+```
+bash ELASTICLLM/Contextual_sparsity/run_c4_mlp.sh 0
+```
+Advanced layer pruning methods.
+
+```
+
+```
+
+### The experiments
+
 ## On-device deployment
 
 We provide an on-device deployment demo of ElastiLM.
