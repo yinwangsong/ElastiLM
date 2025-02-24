@@ -7,7 +7,7 @@ ElastiLM
 |–– ElastiLM/
 |   |–– ... # datasets for on-device training
 |–– deployment/
-|   |–– ... # documents
+|   |–– mllm # C++/Assembly code for on-device deployment
 |–– proxynetworks/ # original NN, proxy networks, etc. 
 |   |–– models/
 |   |   |––jit/
@@ -38,6 +38,18 @@ numpy==1.26.4
 tqdm==4.66.4
 wandb==0.17.0
 ```
+For detailed information, we recommend you directly using the [docker image](), or checking the software inside it and installing them manually.
+
+ElastiLM is built atop several third-party libs, which are modified significantly from their original source code. You need to install some of them by
+```
+cd transformers/
+pip install -e .
+cd ../scores/
+pip install -e .
+cd ../LLMLingua/
+pip install -e .
+```
+
 
 ## On-device deployment
 
