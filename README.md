@@ -93,6 +93,18 @@ python3 ELASTICLLM/Anchor_layers/orca_mini_3b_layers.py
 
 ElastiLM trains a tiny (or you can say small) language model for prompt elastification and prompt-model orchestration.
 
+Run the following instructions to train the dual heads of the TLM.
+
+```
+python3 ELASTICLLM/train_slm/llama/train_mobilebert_scorehead.py
+python3 ELASTICLLM/train_slm/llama/train_mobilebert_decisionhead.py
+...
+python3 ELASTICLLM/train_slm/llama3/train_mobilebert_scorehead.py
+python3 ELASTICLLM/train_slm/llama3/train_mobilebert_decisionhead.py
+```
+
+You will see `slm_scorehead.pt` and `slm_decisionhead_llama.pt` under the same directory.
+
 ## On-device deployment
 
 We provide an on-device deployment demo of ElastiLM.
