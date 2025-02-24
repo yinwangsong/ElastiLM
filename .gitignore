@@ -3,3 +3,4 @@ prune_log/
 ELASTICLLM/imp/
 *.pt
 in_out_ckpts/
+wandb/
