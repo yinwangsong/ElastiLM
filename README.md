@@ -28,7 +28,7 @@ ElastiLM
 
 ### Hardware/software environment
 
-We mainly perform the expriments on a cloud linux server with 8$\times$ 45GB A40 GPUs.
+We mainly perform the expriments on a cloud linux server with 8x 45GB A40 GPUs.
 The software environment is
 ```
 python=3.10.12
