@@ -17,7 +17,6 @@ import random
 import os
 import numpy
 
-from auto_gptq.eval_tasks import SequenceClassificationTask, TextSummarizationTask, sequence_classification_task
 
 import argparse
 

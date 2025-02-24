@@ -170,7 +170,8 @@ class Group(object):
                     last_idxs = idxs
                 else:
                     if last_idxs != idxs:
-                        print("error")
+                        # print("error")
+                        pass
                 if dep.target.type == ops.OPTYPE.PARAMETER:
                     old_parameter = dep.target.module
                     name = self._DG._param_to_name[old_parameter]

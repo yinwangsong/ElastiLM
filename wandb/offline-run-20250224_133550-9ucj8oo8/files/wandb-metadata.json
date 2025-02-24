@@ -1,0 +1,101 @@
+{
+  "os":  "Linux-5.4.0-150-generic-x86_64-with-glibc2.35",
+  "python":  "CPython 3.10.12",
+  "startedAt":  "2025-02-24T13:35:50.269233Z",
+  "args":  [
+    "--prune_model",
+    "prune_log/llama3_0.2/pytorch_model.bin",
+    "--data_path",
+    "yahma/alpaca-cleaned",
+    "--output_dir",
+    "tune_log/llama3_0.2",
+    "--wandb_project",
+    "llama3_tune",
+    "--lora_r",
+    "8",
+    "--num_epochs",
+    "2",
+    "--learning_rate",
+    "1e-4",
+    "--batch_size",
+    "64"
+  ],
+  "program":  "/root/ElastiLM/./LLMPruner/post_training.py",
+  "codePath":  "LLMPruner/post_training.py",
+  "git":  {
+    "remote":  "https://github.com/yinwangsong/ElastiLM.git",
+    "commit":  "f7947e5b2d734155ae080657038b80b009c8f60a"
+  },
+  "root":  "/root/ElastiLM",
+  "host":  "f4cf18ae5791",
+  "executable":  "/usr/bin/python3",
+  "codePathLocal":  "LLMPruner/post_training.py",
+  "cpu_count":  32,
+  "cpu_count_logical":  64,
+  "gpu":  "NVIDIA A40",
+  "gpu_count":  8,
+  "disk":  {
+    "/":  {
+      "total":  "23905828765696",
+      "used":  "22683770281984"
+    }
+  },
+  "memory":  {
+    "total":  "810222551040"
+  },
+  "cpu":  {
+    "count":  32,
+    "countLogical":  64
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA A40",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A40",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A40",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A40",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A40",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A40",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A40",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A40",
+      "memoryTotal":  "48305799168",
+      "cudaCores":  10752,
+      "architecture":  "Ampere"
+    }
+  ],
+  "cudaVersion":  "12.1"
+}
