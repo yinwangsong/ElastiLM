@@ -31,6 +31,7 @@ ElastiLM
 |–– deployment/
 |   |–– mllm # C++/Assembly code for on-device deployment
 |   |   |––...
+```
 
 ## Running ElastiLM
 
