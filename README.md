@@ -49,27 +49,7 @@ pip install -e .
 cd ../LLMLingua/
 pip install -e .
 ```
-. 
-
-### Elasticizing & LoRA Recovery
-
-First, profile the importance of permutation-consistent units and recover each submodel with LoRA.
-
-```
-# '02.sh' means identifying the top 20% important permutation consistent units.
-# '0' means the GPU rank.
-bash LLMPruner/scripts/02.sh 0
-bash LLMPruner/scripts/03.sh 0
-bash LLMPruner/scripts/04.sh 0
-...
-bash LLMPruner/scripts/05.sh 0
-```
-
-After profiling, the importance scores will be generated in `ELASTICLLM/imp/`.
-The corresponding LoRAs will be generated in `ELASTICLLM/tune_log/`.
-
-This procedure will last for over 100 hours on a single A40 GPU for all the models in our experiment. 
-For the efficiency of multi-GPU users, we also provide fine-grained scripts in `LLMPruner/scripts/<model_name>_prune_tune/`.
+. Please set your `HF_HOME` as `/data/share`.
 
 ### Calibrating the anchor layers
 
@@ -88,6 +68,27 @@ python3 ELASTICLLM/Anchor_layers/orca_mini_3b_layers.py
 [8.74935245513916, 3.9551780223846436, 6.804546356201172, 3.6290643215179443, 3.6744985580444336, 3.544438600540161, 3.488487482070923, 3.517648696899414, 3.483860731124878, 3.4955999851226807, 3.50988507270813, 3.5368385314941406, 3.496831178665161, 3.496894359588623, 3.5130739212036133, 3.4906234741210938, 3.4990649223327637, 3.5532522201538086, 3.5287230014801025, 3.532752752304077, 3.516073703765869, 3.4922406673431396, 3.462526798248291, 3.5130510330200195, 3.501737356185913, 3.4650626182556152, 3.449836015701294, 3.5024378299713135, 3.5504703521728516, 3.4913651943206787, 3.7376880645751953, 4.114096164703369]
 [26, 22, 25, 8, 6, 15, 29, 21, 9, 12, 13, 16, 24, 27, 10, 23, 14, 20, 7, 18, 19, 11, 5, 28, 17, 3, 4, 30, 1, 31, 2, 0]
 ```
+We have pre-profiled the anchor layers for each model and embedded these layers in the code.
+
+### Elasticizing & LoRA Recovery
+
+Then, profile the importance of permutation-consistent units and recover each submodel with LoRA.
+
+```
+# '02.sh' means identifying the top 20% important permutation consistent units.
+# '0' means the GPU rank.
+bash LLMPruner/scripts/02.sh 0
+bash LLMPruner/scripts/03.sh 0
+bash LLMPruner/scripts/04.sh 0
+...
+bash LLMPruner/scripts/05.sh 0
+```
+
+After profiling, the importance scores will be generated in `ELASTICLLM/imp/`.
+The corresponding LoRAs will be generated in `ELASTICLLM/tune_log/`.
+
+This procedure will last for over 100 hours on a single A40 GPU for all the models in our experiment. 
+For the efficiency of multi-GPU users, we also provide fine-grained scripts in `LLMPruner/scripts/<model_name>_prune_tune/`.
 
 ### The tiny language model
 
