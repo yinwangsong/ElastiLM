@@ -120,6 +120,15 @@ Advanced layer pruning methods.
 
 ### Experiments on standalone dataset
 
+The scripts are placed in `ELASTICLLM/scripts/`.
+Run each dataset by
+```
+bash ELASTICLLM/scripts/ARC_E.sh 0
+...
+```
+. You will see the results under `ELASTICLLM/scripts/res/<model>_<dataset>.txt`
+
+
 ### Experiments on end-to-end traces
 
 Firstly, synthesize the traces.
