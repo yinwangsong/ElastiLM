@@ -4,25 +4,33 @@ Code for \[TBD'25\] Elastic On-Device LLM Service.
 
 ```
 ElastiLM
-|–– ElastiLM/
-|   |–– ... # datasets for on-device training
+|–– ELASTICLLM/
+|   |–– Anchor_layers/ # profiling the anchor layers
+|   |   |––...
+|   |–– Contextual_sparsity/ # profiling the activation sparsity
+|   |   |––...
+|   |–– Data/ # several datasets
+|   |   |––...
+|   |–– train_slm/ # training the tiny language model
+|   |   |––...
+|   |–– scripts/ # running the experiments on standalone datasets
+|   |   |––...
+|   |–– e2e/ # running the experiments on end-to-end traces
+|   |   |––...
+|   |–– ARC_E.py
+|   |–– ...
+|   |–– OBQA.py
+|–– LLMPruner/
+|   |–– ...
+|–– LLMLingua/
+|   |–– ...
+|–– transformers/
+|   |–– ...
+|–– scores/
+|   |–– ...
 |–– deployment/
 |   |–– mllm # C++/Assembly code for on-device deployment
-|–– proxynetworks/ # original NN, proxy networks, etc. 
-|   |–– models/
-|   |   |––jit/
-|   |   |   |––...
-|   |––pth/
 |   |   |––...
-|–– res/ # training configs and logs
-|   |––train_log/ 
-|–– scripts/
-|   |––run_e2e.sh
-|   |––...
-|–– src/
-|   |––training.py
-|   |––...
-```
 
 ## Running ElastiLM
 
