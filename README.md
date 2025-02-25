@@ -134,10 +134,10 @@ The number (e.g., `0`) means the skewness of the trace.
 Then, run the end-to-end experiments.
 
 ```
-bash run_e2e.sh 0 1 # 0: GPU rank; 1: model id
-bash run_e2e.sh 0 2
+bash ELASTICLLM/e2e/scripts/run_e2e.sh 0 1 # 0: GPU rank; 1: model id
+bash ELASTICLLM/e2e/scripts/run_e2e.sh 0 2
 ...
-bash run_e2e.sh 0 5
+bash ELASTICLLM/e2e/scripts/run_e2e.sh 0 5
 ```
 
 You will see the results in `ELASTICLLM/e2e/scripts/res/res_<model>.txt`.
