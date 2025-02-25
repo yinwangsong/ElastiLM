@@ -17,9 +17,8 @@ import random
 import os
 import numpy
 
-import argparse
 
-import pandas as pd
+import argparse
 
 # datasets that opt can handle
 # truthfulQA BoolQ LAMBADA SciQ octopus ARC-E
@@ -1509,7 +1508,6 @@ if args.mode == "Lingua2+Contextual":
         model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
 
-
 if args.mode == "LLMPruner":
     prune_ratio = args.prefill_SLO
 
@@ -1748,44 +1746,107 @@ if args.mode == "debug":
     #     "/data/yinwangsong/LLM-Pruner/tune_log/llama_0.5",
     #     map_location='cuda'
     # ).half()
+if args.mode == "permute_submodels_recovered":
+    prune_ratio = args.prefill_SLO
+
+    import sys
+
+    # 获取当前文件的路径
+    current_path = os.path.dirname(__file__)
+
+    # 获取两级父目录的路径
+    parent_path = os.path.abspath(os.path.join(current_path, '../LLMPruner/'))
+
+    # 将父目录路径添加到sys.path中
+    if parent_path not in sys.path:
+        sys.path.append(parent_path)
+    
+    from LLMPruner.peft import PeftModel
+
+    pruned_dict = torch.load("prune_log/llama_{}/pytorch_model.bin".format(prune_ratio), map_location='cuda')
+    tokenizer, model = pruned_dict['tokenizer'], pruned_dict['model'].half()
+
+    model = PeftModel.from_pretrained(
+        model,
+        "tune_log/llama_{}/".format(prune_ratio),
+        map_location='cuda'
+    ).half()
+
+if args.mode == "llmpruner_submodels":
+    scores.sparse.PRUNE = False
+    scores.sparse.SPARSE = False
+    scores.sparse.LORA = False
+
+    prune_ratio = args.prefill_SLO
+
+    import sys
+
+    # 获取当前文件的路径
+    current_path = os.path.dirname(__file__)
+
+    # 获取两级父目录的路径
+    parent_path = os.path.abspath(os.path.join(current_path, '../LLMPruner/'))
+
+    # 将父目录路径添加到sys.path中
+    if parent_path not in sys.path:
+        sys.path.append(parent_path)
+
+    model = torch.load("prune_log/llama_{}_alllayers/pytorch_model.bin".format(prune_ratio))["model"].half().cuda()
+    tokenizer = torch.load("prune_log/llama_{}_alllayers/pytorch_model.bin".format(prune_ratio))["tokenizer"]
+
+if args.mode == "llmpruner_submodels_recovered":
+
+    prune_ratio = args.prefill_SLO
+
+    import sys
+
+    # 获取当前文件的路径
+    current_path = os.path.dirname(__file__)
+
+    # 获取两级父目录的路径
+    parent_path = os.path.abspath(os.path.join(current_path, '../LLMPruner/'))
+
+    # 将父目录路径添加到sys.path中
+    if parent_path not in sys.path:
+        sys.path.append(parent_path)
+    
+    from LLMPruner.peft import PeftModel
+
+    pruned_dict = torch.load("prune_log/llama_{}_alllayers/pytorch_model.bin".format(prune_ratio), map_location='cuda')
+    tokenizer, model = pruned_dict['tokenizer'], pruned_dict['model'].half()
+
+    model = PeftModel.from_pretrained(
+        model,
+        "tune_log/llama_{}_alllayers/".format(prune_ratio),
+        map_location='cuda'
+    ).half()
 
 tokenizer.padding_side = "left"
 tokenizer.pad_token = tokenizer.eos_token
 
-data_dir = "ELASTICLLM/Data/Octopus_refined"
-task = "android_benchmark"
-dev_df = pd.read_csv(os.path.join(data_dir, "dev", task + ".csv"), header=None)
-val_df = pd.read_csv(os.path.join(data_dir, "val", task + ".csv"), header=None)
+dataset = datasets.load_dataset(path="allenai/sciq", split="validation")
 
-print(dev_df)
-print(val_df)
-
-with open(data_dir + '/functions_simple.txt', 'r') as file:
-    doc = file.read()
-
-LABELS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U"]
+print(dataset)
 
 SYS_PROMPT = ""
-SYS_PROMPT += "You are a smart assistant that helps human sloving problems. You help them by answering questions."
-SYS_PROMPT += "\n{functions}".format(functions=doc)
+SYS_PROMPT += "You are a smart assistant that helps human sloving problems. You help them by answering questions.\n"
+SYS_PROMPT += "Examples: \nQuestion: What type of organism is commonly used in preparation of foods such as cheese and yogurt? Answer: mesophilic organisms."
+SYS_PROMPT += "\nQuestion: What phenomenon makes global winds blow northeast to southwest or the reverse in the northern hemisphere and northwest to southeast or the reverse in the southern hemisphere? Answer: coriolis effect."
+SYS_PROMPT += "\nQuestion: What tools do you need to make a suncatcher? Answer: You need tape, a CD, a printed design, and tape."
+SYS_PROMPT += "\nQuestion: Changes from a less-ordered state to a more-ordered state (such as a liquid to a solid) are always what? Answer: exothermic."
+SYS_PROMPT += "\nQuestion: What is the least dangerous radioactive decay? Answer: alpha decay."
 
-SYS_PROMPT += "\nExamples:"
-
-for i in range(len(dev_df)):
-    question, choice = dev_df.iloc[i, 0], dev_df.iloc[i, -1]
-    SYS_PROMPT += "\nQuestion: {question} Answer: {answer}".format(question=question, answer=dev_df.iloc[i, ord(choice)-ord('A')+1])
-    if i==5:
-        break
-
-QUERY = "\nQuestion: {question}"
+QUERY = "Question: {question} "
 QUERY += "Answer:"
+LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+LABELS_NUMBER = ['1', '2', '3', '4', '5', '6', '7', '8']
 
-# print(TEMPLATE)
-
+model = model.eval()
+choices = ['distractor1', 'distractor2', 'distractor3', 'correct_answer']
 num_right = 0
 with torch.no_grad():
-    for i in tqdm(range(len(val_df))):
-
+    for i in tqdm(range(len(dataset))):
+        
         # compress the prompt
         if args.mode == "Ours": 
 
@@ -1800,9 +1861,6 @@ with torch.no_grad():
                 return_tensors='pt'
             ).cuda()
 
-            if decision_head_input.shape[-1] > 512:
-                decision_head_input = decision_head_input[:, :512]
-
             prompt_ratio, model_ratio = decision_head(decision_head_input)
 
             prompt_ratio = prompt_ratios[torch.argmax(prompt_ratio.squeeze()).item()]
@@ -1815,6 +1873,7 @@ with torch.no_grad():
                         model_ratio = r
 
             prompt_compress_ratio = prompt_ratio
+
             if args.model == "llama":
                 model = get_llama(model, model_ratio)
             if args.model == "vicuna":
@@ -1828,8 +1887,8 @@ with torch.no_grad():
 
             max_query_len = 0
 
-            for j in range(len(LABELS)):
-                NEW_QUERY = "Question: {question} Answer: {answer}".format(question=val_df.iloc[i, 0], answer=val_df.iloc[i, j+1])
+            for j in range(len([choices])):
+                NEW_QUERY = "Question: {question} Answer: {answer}".format(question=dataset[i]['question'], answer=dataset[i][choices[j]])
                 query = tokenizer.encode(
                     NEW_QUERY
                 )
@@ -1841,30 +1900,23 @@ with torch.no_grad():
             sys_prompt_len = len(sys_prompt_ids)
             sys_prompt_compress_ratio = ((sys_prompt_len + max_query_len) * prompt_compress_ratio - max_query_len) / sys_prompt_len
             sys_prompt_compress_ratio = sys_prompt_compress_ratio if sys_prompt_compress_ratio > 0 else 0
+
             # slm = torch.load("ELASTICLLM/train_slm/{}/slm_scorehead.pt".format(args.model)).cuda()
             text = decision_head_tokenizer.encode(
                 SYS_PROMPT,
                 return_tensors='pt'
             ).cuda()
-
-            scored_pred = torch.empty(0).cuda()
-            cur_pos = 0
-            while cur_pos < text.shape[-1]:
-                text_chunked = text[:, cur_pos:min(cur_pos+512, text.shape[-1])]
-                pred_chunked = slm(text_chunked).logits[:, :, 1].squeeze()
-                scored_pred = torch.cat((scored_pred, pred_chunked), dim=-1)
-                cur_pos += 512
-            pred, pred_indices = torch.sort(scored_pred)
+            pred = slm(text).logits[:, :, 1].squeeze()
+            pred, pred_indices = torch.sort(pred)
+            # print(sys_prompt_compress_ratio)
             # pred_indices = pred_indices[int(sys_prompt_compress_ratio*sys_prompt_len):]
             pred_indices = pred_indices[:int(sys_prompt_compress_ratio*sys_prompt_len)+1]
-
 
             sys_prompt_compressed = []
             for idx in range(sys_prompt_len):
                 if idx in pred_indices:
                     sys_prompt_compressed.append(sys_prompt_ids[idx])
-
-
+            
             sys_prompt_compressed = decision_head_tokenizer.decode(
                 sys_prompt_compressed
             )
@@ -1894,25 +1946,17 @@ with torch.no_grad():
             scores.contextual.ratio = model_ratio
         else:
             TEMPLATE = SYS_PROMPT + QUERY
+        # print(TEMPLATE)
 
-
-        prompt = TEMPLATE.format(question=val_df.iloc[i, 0])
-        
-        while len(tokenizer.encode(prompt)) + 1> 1900: # bos token
-            prompt_split = prompt.split("\n\n")
-            prompt_split.pop(1)
-            prompt = '\n\n'.join(prompt_split)
-
-        choice = val_df.iloc[i, -1]
+        prompt = TEMPLATE.format(question=dataset[i]['question'])
         # create answers
         batched_answers = []
         generated_texts = []
-
-        for l in range(len(LABELS)):
-            answer = prompt + val_df.iloc[i, l+1]
+        for j in range(len(choices)):
+            answer = prompt + dataset[i][choices[j]]
             batched_answers.append(answer)
-            generated_texts.append(val_df.iloc[i, l+1])
-        
+            generated_texts.append(dataset[i][choices[j]])
+
         inputs = tokenizer.batch_encode_plus(
             batched_answers,
             add_special_tokens=False,
@@ -1925,62 +1969,18 @@ with torch.no_grad():
             padding=True,
             return_tensors='pt'
         )
-        
+
         generated_tokens = generated_ids["input_ids"].cuda()
         generated_mask = generated_ids["attention_mask"].cuda()
-
-        # we have to split the batch here due to the annoying OOM
+        # print(inputs["input_ids"])
+        pred = F.log_softmax(
+            model(
+                inputs["input_ids"][:, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][:, :-1].cuda(),
+            ).logits,
+            dim=-1
+        )
         max_generated_len = generated_ids["attention_mask"].shape[-1]
-        pos1 = 5
-        pos2 = 10
-        pos3 = 15
-        model_logits_batch1 = model(
-            inputs["input_ids"][:pos1, :-1].cuda(), 
-            attention_mask = inputs["attention_mask"][:pos1, :-1].cuda(),
-        ).logits
-        pred1 = F.log_softmax(
-            model_logits_batch1,
-            dim=-1
-        )
-        pred1 = pred1[:, -max_generated_len:, :]
-        pred = pred1
-
-        model_logits_batch2 = model(
-            inputs["input_ids"][pos1:pos2, :-1].cuda(), 
-            attention_mask = inputs["attention_mask"][pos1:pos2, :-1].cuda(),
-        ).logits
-        pred2 = F.log_softmax(
-            model_logits_batch2,
-            dim=-1
-        )
-        pred2 = pred2[:, -max_generated_len:, :]
-        pred = torch.cat((pred, pred2), dim=0)
-        del pred2
-
-        model_logits_batch3 = model(
-            inputs["input_ids"][pos2:pos3, :-1].cuda(), 
-            attention_mask = inputs["attention_mask"][pos2:pos3, :-1].cuda(),
-        ).logits
-        pred3 = F.log_softmax(
-            model_logits_batch3,
-            dim=-1
-        )
-        pred3 = pred3[:, -max_generated_len:, :]
-        pred = torch.cat((pred, pred3), dim=0)
-        del pred3
-
-        model_logits_batch4 = model(
-            inputs["input_ids"][pos3:, :-1].cuda(), 
-            attention_mask = inputs["attention_mask"][pos3:, :-1].cuda(),
-        ).logits
-        pred4 = F.log_softmax(
-            model_logits_batch4,
-            dim=-1
-        )
-        pred4 = pred4[:, -max_generated_len:, :]
-        pred = torch.cat((pred, pred4), dim=0)
-        del pred4
-
         pred = pred[:, -max_generated_len:, :]
         idx = generated_tokens.unsqueeze(2)
         prob = torch.gather(pred, 2, idx).squeeze(-1)
@@ -1990,20 +1990,16 @@ with torch.no_grad():
 
         sumprobs = torch.sum(prob, dim=1)
         sumprobs /= torch.sum(generated_mask, dim=1)
-        # print(sumprobs.shape)
-        # print(torch.topk(sumprobs.squeeze(), 5, dim=0))
-        top5_res = torch.topk(sumprobs.squeeze(), 5, dim=0)[-1]
-        # res = torch.argmax(sumprobs.squeeze(), dim=0)
+        res = torch.argmax(sumprobs.squeeze(), dim=0)
         # print(sumprobs)
-        for res in top5_res.tolist():
-            if LABELS[res] == choice:
-                num_right += 1
-print(num_right/len(val_df))
+        if res == 3:
+            num_right += 1
+print(num_right/len(dataset))
 
 with open(args.res_save_pth, 'a') as file:
-    file.write('Octopus {} {} {} {} {}\n'.format(
+    file.write('SCIQ {} {} {} {} {}\n'.format(
         args.model,
         args.mode,
         args.prefill_SLO,
         args.decode_SLO,
-        str(num_right/len(val_df))))
+        str(num_right/len(dataset))))

@@ -1,6 +1,11 @@
-# import os
-# os.system('export HF_HOME=/data/share')
-# os.system('export HF_ENDPOINT=https://hf-mirror.com')
+# this file runs a model on a specific trace.
+# it does the following things:
+# 1. read a request from the trace.
+# 2. prepare the prompt and model according to the SLO.
+# 3. run inference
+# 4. judge correctness
+# 5. calculate accuracy
+
 
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import torch
@@ -17,12 +22,31 @@ import random
 import os
 import numpy
 
+
 import argparse
 
 import pandas as pd
 
 # datasets that opt can handle
 # truthfulQA BoolQ LAMBADA SciQ octopus ARC-E
+
+@torch.no_grad()
+def quantize_and_dequantize(t, n_bits):
+    scales = t.abs().max(dim=-2, keepdim=True)[0]
+    print(scales.shape)
+    q_max = 2 ** (n_bits - 1) - 1
+    scales.clamp_(min=1e-5).div_(q_max)
+    t.div_(scales).round_().mul_(scales)
+    return t
+
+
+def quant_and_dequant_llama(model, bits=8):
+    for name, param in model.named_parameters():
+        if 'proj' in name:
+            raw = copy.deepcopy(param.data)
+            param.data = quantize_and_dequantize(raw, bits)
+
+
 
 
 def set_seed(seed=42):
@@ -41,11 +65,12 @@ set_seed(42)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode') # Off-The-Shelf/Lingua2+Contextual/LLMPruner/LayerReduction/Ours
-parser.add_argument('--prune_ratio', type=str, default="2.7b")
-parser.add_argument('--prefill_SLO', type=float, default=1.0)
-parser.add_argument('--decode_SLO', type=float, default=1.0)
+parser.add_argument('--alpha')
 parser.add_argument('--model')
 parser.add_argument('--res_save_pth')
+
+parser.add_argument('--bits', type=int, default=0)
+parser.add_argument('--refinement', type=float, default=0.0)
 
 args = parser.parse_args()
 
@@ -69,7 +94,7 @@ DECODE_SLO = [
     '<10>'
 ]
 
-prefill_dict = {0.2: '[02]', 0.3: '[03]', 0.4: '[04]', 0.5: '[05]', 0.6: '[06]', 0.7: '[07]', 0.8: '[08]', 0.9: '[09]',}
+prefill_dict = {0.2: '[02]', 0.3: '[03]', 0.4: '[04]', 0.5: '[05]', 0.6: '[06]', 0.7: '[07]', 0.8: '[08]', 0.9: '[09]', 1.0: '[09]',}
 decode_dict = {0.5: '<05>', 0.6: '<06>', 0.7: '<07>', 0.8: '<08>', 0.9: '<09>', 1.0: '<10>',}
 
 prompt_ratios = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
@@ -146,15 +171,15 @@ def reorder_llama(model):
             pruned_indices = json.load(file)
 
         # reorder lora
-        lora = torch.load("./tune_log/llama_{pth}/adapter_model.bin".format(pth=prune_ratio))
+        lora = torch.load("/data/yinwangsong/ELASTICLLM/tune_log/llama_{pth}/adapter_model.bin".format(pth=prune_ratio))
 
         import scores, os
-        directory = "./ELASTICLLM/imp/Ours/llama/llama_{pth}/imp.json".format(pth=prune_ratio)
+        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama/llama_{pth}/imp.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             imps = json.load(file)
 
         import scores, os
-        directory = "./ELASTICLLM/imp/Ours/llama/llama_{pth}/rank_pruned.json".format(pth=prune_ratio)
+        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama/llama_{pth}/rank_pruned.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             pruned_indices = json.load(file)
 
@@ -326,7 +351,7 @@ def get_llama(model, ratio):
     
     # 准备mask
     import scores, os
-    directory = "./ELASTICLLM/imp/Ours/llama/llama_{pth}/rank_pruned.json".format(pth=prune_ratio)
+    directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama/llama_{pth}/rank_pruned.json".format(pth=prune_ratio)
     with open(directory, 'r') as file:
         pruned_indices = json.load(file)
 
@@ -416,15 +441,15 @@ def reorder_vicuna(model):
             pruned_indices = json.load(file)
 
         # reorder lora
-        lora = torch.load("./tune_log/vicuna_{pth}/adapter_model.bin".format(pth=prune_ratio))
+        lora = torch.load("/data/yinwangsong/ELASTICLLM/tune_log/vicuna_{pth}/adapter_model.bin".format(pth=prune_ratio))
 
         import scores, os
-        directory = "./ELASTICLLM/imp/Ours/vicuna/vicuna_{pth}/imp.json".format(pth=prune_ratio)
+        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/vicuna/vicuna_{pth}/imp.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             imps = json.load(file)
 
         import scores, os
-        directory = "./ELASTICLLM/imp/Ours/vicuna/vicuna_{pth}/rank_pruned.json".format(pth=prune_ratio)
+        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/vicuna/vicuna_{pth}/rank_pruned.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             pruned_indices = json.load(file)
 
@@ -596,7 +621,7 @@ def get_vicuna(model, ratio):
     
     # 准备mask
     import scores, os
-    directory = "./ELASTICLLM/imp/Ours/vicuna/vicuna_{pth}/rank_pruned.json".format(pth=prune_ratio)
+    directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/vicuna/vicuna_{pth}/rank_pruned.json".format(pth=prune_ratio)
     with open(directory, 'r') as file:
         pruned_indices = json.load(file)
 
@@ -686,15 +711,15 @@ def reorder_orcamini(model):
             pruned_indices = json.load(file)
 
         # reorder lora
-        lora = torch.load("./tune_log/orca_mini_{pth}/adapter_model.bin".format(pth=prune_ratio))
+        lora = torch.load("/data/yinwangsong/ELASTICLLM/tune_log/orca_mini_{pth}/adapter_model.bin".format(pth=prune_ratio))
 
         import scores, os
-        directory = "./ELASTICLLM/imp/Ours/orca_mini/orca_mini_{pth}/imp.json".format(pth=prune_ratio)
+        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/orca_mini/orca_mini_{pth}/imp.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             imps = json.load(file)
 
         import scores, os
-        directory = "./ELASTICLLM/imp/Ours/orca_mini/orca_mini_{pth}/rank_pruned.json".format(pth=prune_ratio)
+        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/orca_mini/orca_mini_{pth}/rank_pruned.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             pruned_indices = json.load(file)
 
@@ -866,7 +891,7 @@ def get_orcamini(model, ratio):
     
     # 准备mask
     import scores, os
-    directory = "./ELASTICLLM/imp/Ours/orca_mini/orca_mini_{pth}/rank_pruned.json".format(pth=prune_ratio)
+    directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/orca_mini/orca_mini_{pth}/rank_pruned.json".format(pth=prune_ratio)
     with open(directory, 'r') as file:
         pruned_indices = json.load(file)
 
@@ -970,15 +995,15 @@ def reorder_llama3(model):
             pruned_indices = json.load(file)
 
         # reorder lora
-        lora = torch.load("./tune_log/llama3_{pth}/adapter_model.bin".format(pth=prune_ratio))
+        lora = torch.load("/data/yinwangsong/ELASTICLLM/tune_log/llama3_{pth}/adapter_model.bin".format(pth=prune_ratio))
 
         import scores, os
-        directory = "./ELASTICLLM/imp/Ours/llama3/llama3_{pth}/imp.json".format(pth=prune_ratio)
+        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama3/llama3_{pth}/imp.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             imps = json.load(file)
 
         import scores, os
-        directory = "./ELASTICLLM/imp/Ours/llama3/llama3_{pth}/rank_pruned.json".format(pth=prune_ratio)
+        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama3/llama3_{pth}/rank_pruned.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             pruned_indices = json.load(file)
 
@@ -1150,7 +1175,7 @@ def get_llama3(model, ratio):
     
     # 准备mask
     import scores, os
-    directory = "./ELASTICLLM/imp/Ours/llama3/llama3_{pth}/rank_pruned.json".format(pth=prune_ratio)
+    directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama3/llama3_{pth}/rank_pruned.json".format(pth=prune_ratio)
     with open(directory, 'r') as file:
         pruned_indices = json.load(file)
 
@@ -1254,15 +1279,15 @@ def reorder_llama3_instruct(model):
             pruned_indices = json.load(file)
 
         # reorder lora
-        lora = torch.load("./tune_log/llama3_instruct_{pth}/adapter_model.bin".format(pth=prune_ratio))
+        lora = torch.load("/data/yinwangsong/ELASTICLLM/tune_log/llama3_instruct_{pth}/adapter_model.bin".format(pth=prune_ratio))
 
         import scores, os
-        directory = "./ELASTICLLM/imp/Ours/llama3_instruct/llama3_instruct_{pth}/imp.json".format(pth=prune_ratio)
+        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama3_instruct/llama3_instruct_{pth}/imp.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             imps = json.load(file)
 
         import scores, os
-        directory = "./ELASTICLLM/imp/Ours/llama3_instruct/llama3_instruct_{pth}/rank_pruned.json".format(pth=prune_ratio)
+        directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama3_instruct/llama3_instruct_{pth}/rank_pruned.json".format(pth=prune_ratio)
         with open(directory, 'r') as file:
             pruned_indices = json.load(file)
 
@@ -1434,7 +1459,7 @@ def get_llama3_instruct(model, ratio):
     
     # 准备mask
     import scores, os
-    directory = "./ELASTICLLM/imp/Ours/llama3_instruct/llama3_instruct_{pth}/rank_pruned.json".format(pth=prune_ratio)
+    directory = "/data/yinwangsong/ELASTICLLM/ELASTICLLM/imp/Ours/llama3_instruct/llama3_instruct_{pth}/rank_pruned.json".format(pth=prune_ratio)
     with open(directory, 'r') as file:
         pruned_indices = json.load(file)
 
@@ -1476,19 +1501,52 @@ if args.mode == "Off-The-Shelf":
     scores.sparse.SPARSE = False
     scores.sparse.LORA = False
 
-    if args.prune_ratio == "2.7b":
-        model = AutoModelForCausalLM.from_pretrained("facebook/opt-2.7b", torch_dtype=torch.float16).cuda()
-        tokenizer = AutoTokenizer.from_pretrained("facebook/opt-2.7b")
-    if args.prune_ratio == "1.3b":
-        model = AutoModelForCausalLM.from_pretrained("facebook/opt-1.3b", torch_dtype=torch.float16).cuda()
-        tokenizer = AutoTokenizer.from_pretrained("facebook/opt-1.3b")
-    if args.prune_ratio == "350m":
-        model = AutoModelForCausalLM.from_pretrained("facebook/opt-350m", torch_dtype=torch.float16).cuda()
-        tokenizer = AutoTokenizer.from_pretrained("facebook/opt-350m")
+    if args.model == "llama":
+
+        model_7b = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
+        tokenizer_7b = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+
+
+    if args.model == "llama3":
+
+        model_7b = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B", torch_dtype=torch.float16).cuda()
+        tokenizer_7b = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
+
+
+    if args.model == "llama3-instruct":
+
+        model_7b = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cuda()
+        tokenizer_7b = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
+
+
+    if args.model == "vicuna":
+
+        model_7b = AutoModelForCausalLM.from_pretrained("lmsys/vicuna-7b-v1.5", torch_dtype=torch.float16).cuda()
+        tokenizer_7b = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
+
+    if args.model == "orca3b-mini":
+
+        model_3b = AutoModelForCausalLM.from_pretrained("pankajmathur/orca_mini_3b", torch_dtype=torch.float16).cuda()
+        tokenizer_3b = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+
+    model_2point7b = AutoModelForCausalLM.from_pretrained("facebook/opt-2.7b", torch_dtype=torch.float16).cuda()
+    tokenizer_2point7b = AutoTokenizer.from_pretrained("facebook/opt-2.7b")
+    tokenizer_2point7b.padding_side = "left"
+    tokenizer_2point7b.pad_token = tokenizer_2point7b.eos_token
+
+    model_1point3b = AutoModelForCausalLM.from_pretrained("facebook/opt-1.3b", torch_dtype=torch.float16).cuda()
+    tokenizer_1point3b = AutoTokenizer.from_pretrained("facebook/opt-1.3b")
+    tokenizer_1point3b.padding_side = "left"
+    tokenizer_1point3b.pad_token = tokenizer_1point3b.eos_token
+
+    model_350m = AutoModelForCausalLM.from_pretrained("facebook/opt-350m", torch_dtype=torch.float16).cuda()
+    tokenizer_350m = AutoTokenizer.from_pretrained("facebook/opt-350m")
+
+    tokenizer_350m.padding_side = "left"
+    tokenizer_350m.pad_token = tokenizer_350m.eos_token
 
 if args.mode == "Lingua2+Contextual":
-    prompt_ratio = args.prefill_SLO
-    model_ratio = args.decode_SLO
+
     if args.model == "llama":
         model = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
@@ -1509,9 +1567,7 @@ if args.mode == "Lingua2+Contextual":
         model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
 
-
 if args.mode == "LLMPruner":
-    prune_ratio = args.prefill_SLO
 
     # reorder the model
     scores.sparse.PRUNE = False
@@ -1522,27 +1578,23 @@ if args.mode == "LLMPruner":
         model = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
         model = reorder_llama(model)
-        model = get_llama(model, prune_ratio)
 
     if args.model == "vicuna":
         model = AutoModelForCausalLM.from_pretrained("lmsys/vicuna-7b-v1.5", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
         model = reorder_vicuna(model)
-        model = get_vicuna(model, prune_ratio)
 
     if args.model == "orca3b-mini":
 
         model = AutoModelForCausalLM.from_pretrained("pankajmathur/orca_mini_3b", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
         model = reorder_orcamini(model)
-        model = get_orcamini(model, prune_ratio)
 
     if args.model == "llama3":
 
         model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
         model = reorder_llama3(model)
-        model = get_llama3(model, prune_ratio)
 
 
     if args.model == "llama3-instruct":
@@ -1550,7 +1602,6 @@ if args.mode == "LLMPruner":
         model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
         model = reorder_llama3_instruct(model)
-        model = get_llama3_instruct(model, prune_ratio)
 
 if args.mode == "LayerReduction":
     if args.model == "llama":
@@ -1559,35 +1610,11 @@ if args.mode == "LayerReduction":
         tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
 
 
-        layer_idx_ranks = [24, 28, 27, 22, 11, 17, 6, 26, 2, 21, 13, 19, 12, 15, 20, 23, 18, 14, 29, 25, 10, 3, 9, 16, 8, 30, 7, 4, 1, 0, 5, 31]
-    
-        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
-
-        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
-
-        for i in range(32):
-            if i in layer_idx_retain:
-                model.model.layers[i].is_pruned = False
-            else:
-                model.model.layers[i].is_pruned = True
-
     if args.model == "llama3":
 
         model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
 
-
-        layer_idx_ranks = [8, 26, 24, 23, 9, 12, 25, 19, 22, 13, 17, 21, 11, 10, 14, 20, 4, 15, 28, 6, 3, 18, 7, 16, 5, 27, 29, 2, 30, 31, 1, 0]
-    
-        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
-
-        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
-
-        for i in range(32):
-            if i in layer_idx_retain:
-                model.model.layers[i].is_pruned = False
-            else:
-                model.model.layers[i].is_pruned = True
 
     if args.model == "llama3-instruct":
 
@@ -1595,58 +1622,17 @@ if args.mode == "LayerReduction":
         tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
 
 
-        layer_idx_ranks = [26, 13, 25, 23, 8, 21, 12, 19, 15, 24, 10, 22, 17, 9, 11, 28, 14, 18, 20, 3, 7, 4, 16, 6, 5, 29, 27, 30, 2, 31, 1, 0]
-    
-        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
-
-        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
-
-        for i in range(32):
-            if i in layer_idx_retain:
-                model.model.layers[i].is_pruned = False
-            else:
-                model.model.layers[i].is_pruned = True
-
     if args.model == "vicuna":
 
         model = AutoModelForCausalLM.from_pretrained("lmsys/vicuna-7b-v1.5", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
 
-
-        layer_idx_ranks = [12, 28, 7, 20, 29, 22, 10, 24, 27, 8, 30, 15, 6, 9, 26, 21, 18, 11, 25, 23, 5, 17, 16, 13, 14, 19, 4, 3, 2, 31, 1, 0]
-    
-        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
-
-        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
-
-        for i in range(32):
-            if i in layer_idx_retain:
-                model.model.layers[i].is_pruned = False
-            else:
-                model.model.layers[i].is_pruned = True
     if args.model == "orca3b-mini":
 
         model = AutoModelForCausalLM.from_pretrained("pankajmathur/orca_mini_3b", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
 
-
-        layer_idx_ranks = [15, 14, 19, 12, 21, 22, 10, 8, 11, 3, 23, 17, 7, 9, 24, 5, 16, 18, 4, 20, 13, 6, 1, 25, 2, 0]
-    
-        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
-
-        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*26):]
-
-        for i in range(26):
-            if i in layer_idx_retain:
-                model.model.layers[i].is_pruned = False
-            else:
-                model.model.layers[i].is_pruned = True
-
 if args.mode == "Ours":
-
-    # currently, only 
-    prune_ratio = args.decode_SLO
-    prompt_compress_ratio = round(float(args.prefill_SLO)/float(args.decode_SLO), 1)
 
     # reorder the model
     scores.sparse.PRUNE = False
@@ -1657,8 +1643,9 @@ if args.mode == "Ours":
 
         model = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+        if args.bits != 0:
+            quant_and_dequant_llama(model, args.bits)
         model = reorder_llama(model)
-        model = get_llama(model, prune_ratio)
 
         decision_head = torch.load("ELASTICLLM/train_slm/{}/slm_decisionhead_llama.pt".format(args.model)).cuda()
         decision_head_tokenizer = AutoTokenizer.from_pretrained("google/mobilebert-uncased")
@@ -1668,8 +1655,9 @@ if args.mode == "Ours":
 
         model = AutoModelForCausalLM.from_pretrained("lmsys/vicuna-7b-v1.5", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
+        if args.bits != 0:
+            quant_and_dequant_llama(model, args.bits)
         model = reorder_vicuna(model)
-        model = get_vicuna(model, prune_ratio)
 
         decision_head = torch.load("ELASTICLLM/train_slm/{}/slm_decisionhead_vicuna.pt".format(args.model)).cuda()
         # decision_head = torch.load("ELASTICLLM/train_slm/llama/slm_decisionhead_llama.pt").cuda()
@@ -1681,8 +1669,9 @@ if args.mode == "Ours":
 
         model = AutoModelForCausalLM.from_pretrained("pankajmathur/orca_mini_3b", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+        if args.bits != 0:
+            quant_and_dequant_llama(model, args.bits)
         model = reorder_orcamini(model)
-        model = get_orcamini(model, prune_ratio)
 
         decision_head = torch.load("ELASTICLLM/train_slm/orcamini/slm_decisionhead_orcamini.pt").cuda()
         # decision_head = torch.load("ELASTICLLM/train_slm/llama/slm_decisionhead_llama.pt").cuda()
@@ -1696,7 +1685,6 @@ if args.mode == "Ours":
         model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
         model = reorder_llama3(model)
-        model = get_llama3(model, prune_ratio)
 
         decision_head = torch.load("ELASTICLLM/train_slm/{}/slm_decisionhead_llama3.pt".format(args.model)).cuda()
         # decision_head = torch.load("ELASTICLLM/train_slm/llama/slm_decisionhead_llama.pt").cuda()
@@ -1709,7 +1697,6 @@ if args.mode == "Ours":
         model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
         model = reorder_llama3_instruct(model)
-        model = get_llama3_instruct(model, prune_ratio)
 
         decision_head = torch.load("ELASTICLLM/train_slm/llama3_instruct/slm_decisionhead_llama3_instruct.pt").cuda()
         # decision_head = torch.load("ELASTICLLM/train_slm/llama/slm_decisionhead_llama.pt").cuda()
@@ -1717,293 +1704,1101 @@ if args.mode == "Ours":
         slm = torch.load("ELASTICLLM/train_slm/llama3_instruct/slm_scorehead.pt").cuda()
         # slm = torch.load("ELASTICLLM/train_slm/llama/slm_scorehead.pt").cuda()
 
-if args.mode == "debug":
-    # scores.sparse.PRUNE = False
-    # scores.sparse.SPARSE = False
-    # scores.sparse.LORA = False
-    
-    import sys
 
-    model = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
-    tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+if args.mode != "Off-The-Shelf":
+    tokenizer.padding_side = "left"
+    tokenizer.pad_token = tokenizer.eos_token
 
-    # # 获取当前文件的路径
-    # current_path = os.path.dirname(__file__)
-
-    # # 获取两级父目录的路径
-    # parent_path = os.path.abspath(os.path.join(current_path, '../LLMPruner/'))
-
-    # # 将父目录路径添加到sys.path中
-    # if parent_path not in sys.path:
-    #     sys.path.append(parent_path)
-    
-    # from LLMPruner.peft import PeftModel
-
-
-    # pruned_dict = torch.load('/data/yinwangsong/LLM-Pruner/prune_log/prune_ckpt_path/pytorch_model.bin', map_location='cuda')
-    # tokenizer, model = pruned_dict['tokenizer'], pruned_dict['model'].half()
-
-    # model = PeftModel.from_pretrained(
-    #     model,
-    #     "/data/yinwangsong/LLM-Pruner/tune_log/llama_0.5",
-    #     map_location='cuda'
-    # ).half()
-
-tokenizer.padding_side = "left"
-tokenizer.pad_token = tokenizer.eos_token
-
-data_dir = "ELASTICLLM/Data/Octopus_refined"
-task = "android_benchmark"
-dev_df = pd.read_csv(os.path.join(data_dir, "dev", task + ".csv"), header=None)
-val_df = pd.read_csv(os.path.join(data_dir, "val", task + ".csv"), header=None)
-
-print(dev_df)
-print(val_df)
-
-with open(data_dir + '/functions_simple.txt', 'r') as file:
-    doc = file.read()
-
-LABELS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U"]
-
-SYS_PROMPT = ""
-SYS_PROMPT += "You are a smart assistant that helps human sloving problems. You help them by answering questions."
-SYS_PROMPT += "\n{functions}".format(functions=doc)
-
-SYS_PROMPT += "\nExamples:"
-
-for i in range(len(dev_df)):
-    question, choice = dev_df.iloc[i, 0], dev_df.iloc[i, -1]
-    SYS_PROMPT += "\nQuestion: {question} Answer: {answer}".format(question=question, answer=dev_df.iloc[i, ord(choice)-ord('A')+1])
-    if i==5:
-        break
-
-QUERY = "\nQuestion: {question}"
-QUERY += "Answer:"
-
-# print(TEMPLATE)
+import json
+directory = 'ELASTICLLM/e2e/traces/trace_{}.json'.format(args.alpha)
+with open(directory, 'r') as file:
+    trace = json.load(file)
 
 num_right = 0
-with torch.no_grad():
-    for i in tqdm(range(len(val_df))):
 
-        # compress the prompt
-        if args.mode == "Ours": 
+for entry in tqdm(trace):
+    question = entry[0]
+    choices = entry[1]
+    groundtruth = entry[2]
+    slo = entry[3]
+    dataset = entry[5]
 
-            # decision_head = torch.load("ELASTICLLM/train_slm/{}/slm_decisionhead_llama.pt".format(args.model)).cuda()
-            # decision_head_tokenizer = AutoTokenizer.from_pretrained("google/mobilebert-uncased")
-            special_tokens_dict = {'additional_special_tokens': PREFILL_SLO + DECODE_SLO}
-            num_added_toks = decision_head_tokenizer.add_special_tokens(special_tokens_dict)
-            decision_text = prefill_dict[args.prefill_SLO] + " " + decode_dict[args.decode_SLO] + " " + SYS_PROMPT + QUERY
+    prefill_slo = slo[0]
+    decode_slo = slo[1]
+
+
+    def refine_prompt_with_llmlingua2(prompt, ratio):
+        from llmlingua import PromptCompressor
+
+        ## Or use LLMLingua-2-small model
+        llm_lingua = PromptCompressor(
+            model_name="microsoft/llmlingua-2-bert-base-multilingual-cased-meetingbank",
+            use_llmlingua2=True, # Whether to use llmlingua-2
+        )
+
+        return llm_lingua.compress_prompt(prompt, rate=ratio, force_tokens = ['\n', '?'])['compressed_prompt']
+
+    if args.mode == "Off-The-Shelf":
+
+        if args.model == "llama":
+
+            prune_ratio = min(prefill_slo, decode_slo)
             
-            decision_head_input = decision_head_tokenizer.encode(
-                decision_text,
-                return_tensors='pt'
-            ).cuda()
+            if prune_ratio == 1.0:
+                model = model_7b
+                tokenizer = tokenizer_7b
 
-            if decision_head_input.shape[-1] > 512:
-                decision_head_input = decision_head_input[:, :512]
+            if prune_ratio >= 0.5:
+                model = model_2point7b
+                tokenizer = tokenizer_2point7b
 
-            prompt_ratio, model_ratio = decision_head(decision_head_input)
+            if prune_ratio < 0.5:
+                model = model_1point3b
+                tokenizer = tokenizer_1point3b
 
-            prompt_ratio = prompt_ratios[torch.argmax(prompt_ratio.squeeze()).item()]
-            model_ratio = model_ratios[torch.argmax(model_ratio.squeeze()).item()]
+        if args.model == "llama3":
 
-            if prompt_ratio * model_ratio > args.prefill_SLO or model_ratio > args.decode_SLO:
-                model_ratio = 1.0
-                for r in model_ratios:
-                    if prompt_ratio * r <= args.prefill_SLO and r <= args.decode_SLO:
-                        model_ratio = r
+            prune_ratio = min(prefill_slo, decode_slo)
+            
+            if prune_ratio == 1.0:
+                model = model_7b
+                tokenizer = tokenizer_7b
 
-            prompt_compress_ratio = prompt_ratio
-            if args.model == "llama":
-                model = get_llama(model, model_ratio)
-            if args.model == "vicuna":
-                model = get_vicuna(model, model_ratio)
-            if args.model == "orca3b-mini":
-                model = get_orcamini(model, model_ratio)
-            if args.model == "llama3":
-                model = get_llama3(model, model_ratio)
-            if args.model == "llama3-instruct":
-                model = get_llama3_instruct(model, model_ratio)
+            if prune_ratio >= 0.5:
+                model = model_2point7b
+                tokenizer = tokenizer_2point7b
 
-            max_query_len = 0
+            if prune_ratio < 0.5:
+                model = model_1point3b
+                tokenizer = tokenizer_1point3b
 
-            for j in range(len(LABELS)):
-                NEW_QUERY = "Question: {question} Answer: {answer}".format(question=val_df.iloc[i, 0], answer=val_df.iloc[i, j+1])
-                query = tokenizer.encode(
-                    NEW_QUERY
+        if args.model == "llama3-instruct":
+
+            prune_ratio = min(prefill_slo, decode_slo)
+            
+            if prune_ratio == 1.0:
+                model = model_7b
+                tokenizer = tokenizer_7b
+
+            if prune_ratio >= 0.5:
+                model = model_2point7b
+                tokenizer = tokenizer_2point7b
+
+            if prune_ratio < 0.5:
+                model = model_1point3b
+                tokenizer = tokenizer_1point3b
+
+        if args.model == "vicuna":
+
+            prune_ratio = min(prefill_slo, decode_slo)
+            
+            if prune_ratio == 1.0:
+                model = model_7b
+                tokenizer = tokenizer_7b
+
+            if prune_ratio >= 0.5:
+                model = model_2point7b
+                tokenizer = tokenizer_2point7b
+
+            if prune_ratio < 0.5:
+                model = model_1point3b
+                tokenizer = tokenizer_1point3b
+
+        if args.model == "orca3b-mini":
+
+            prune_ratio = min(prefill_slo, decode_slo)
+            
+            if prune_ratio == 1.0:
+                model = model_3b
+                tokenizer = tokenizer_3b
+
+            if prune_ratio >= 0.5:
+                model = model_1point3b
+                tokenizer = tokenizer_1point3b
+
+            if prune_ratio < 0.5:
+                model = model_350m
+                tokenizer = tokenizer_350m
+        tokenizer.padding_side = "left"
+        tokenizer.pad_token = tokenizer.eos_token
+
+    if dataset == 'ARC_E' or dataset == 'OBQA':
+        
+        if dataset == 'ARC_E':
+            SYS_PROMPT = ""
+            SYS_PROMPT += "You are a smart assistant that helps human sloving problems. You help them by answering questions.\n"
+            SYS_PROMPT += "Examples: \nQuestion: Which factor will most likely cause a person to develop a fever? Answer: a bacterial population in the bloodstream."
+            SYS_PROMPT += "\nQuestion: Lichens are symbiotic organisms made of green algae and fungi. What do the green algae supply to the fungi in this symbiotic relationship? Answer: food."
+            SYS_PROMPT += "\nQuestion: When a switch is used in an electrical circuit, the switch can Answer: stop and start the flow of current."
+            SYS_PROMPT += "\nQuestion: Which of the following is an example of an assistive device? Answer: contact lens."
+            SYS_PROMPT += "\nQuestion: Rocks are classified as igneous, metamorphic, or sedimentary according to Answer: how they formed."
+
+            QUERY = "Question: {question} "
+            QUERY += "Answer:"
+            LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+            LABELS_NUMBER = ['1', '2', '3', '4', '5', '6', '7', '8']
+
+            if args.refinement != 0.0:
+                SYS_PROMPT = refine_prompt_with_llmlingua2(SYS_PROMPT, args.refinement)
+
+        if dataset == 'OBQA':
+            SYS_PROMPT = ""
+            SYS_PROMPT += "You are a smart assistant that helps human sloving problems. You help them by answering questions.\n"
+            SYS_PROMPT += "Examples: \nQuestion: The sun is responsible for Answer: plants sprouting, blooming and wilting."
+            SYS_PROMPT += "\nQuestion: When standing miles away from Mount Rushmore Answer: the mountains seem smaller than in photographs."
+            SYS_PROMPT += "\nQuestion: When food is reduced in the stomach Answer: nutrients are being deconstructed."
+            SYS_PROMPT += "\nQuestion: Stars are Answer: great balls of gas burning billions of miles away."
+            SYS_PROMPT += "\nQuestion: You can make a telescope with a Answer: mailing tube."
+
+            QUERY = "Question: {question} "
+            QUERY += "Answer:"
+            LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+            LABELS_NUMBER = ['1', '2', '3', '4', '5', '6', '7', '8']
+
+            if args.refinement != 0.0:
+                SYS_PROMPT = refine_prompt_with_llmlingua2(SYS_PROMPT, args.refinement)
+
+        model = model.eval()
+        with torch.no_grad():
+            # compress the prompt
+            if args.mode == "Ours": 
+
+                # decision_head = torch.load("ELASTICLLM/train_slm/{}/slm_decisionhead_llama.pt".format(args.model)).cuda()
+                # decision_head_tokenizer = AutoTokenizer.from_pretrained("google/mobilebert-uncased")
+                special_tokens_dict = {'additional_special_tokens': PREFILL_SLO + DECODE_SLO}
+                num_added_toks = decision_head_tokenizer.add_special_tokens(special_tokens_dict)
+                decision_text = prefill_dict[prefill_slo] + " " + decode_dict[decode_slo] + " " + SYS_PROMPT + QUERY
+                
+                decision_head_input = decision_head_tokenizer.encode(
+                    decision_text,
+                    return_tensors='pt'
+                ).cuda()
+
+                prompt_ratio, model_ratio = decision_head(decision_head_input)
+
+                prompt_ratio = prompt_ratios[torch.argmax(prompt_ratio.squeeze()).item()]
+                model_ratio = model_ratios[torch.argmax(model_ratio.squeeze()).item()]
+
+                if prompt_ratio * model_ratio > prefill_slo or model_ratio > decode_slo:
+                    model_ratio = 1.0
+                    for r in model_ratios:
+                        if prompt_ratio * r <= prefill_slo and r <= decode_slo:
+                            model_ratio = r
+
+                prompt_compress_ratio = prompt_ratio
+
+                if args.model == "llama":
+                    model = get_llama(model, model_ratio)
+                if args.model == "vicuna":
+                    model = get_vicuna(model, model_ratio)
+                if args.model == "orca3b-mini":
+                    model = get_orcamini(model, model_ratio)
+                if args.model == "llama3":
+                    model = get_llama3(model, model_ratio)
+                if args.model == "llama3-instruct":
+                    model = get_llama3_instruct(model, model_ratio)
+
+                max_query_len = 0
+                for j in range(len(choices)):
+                    NEW_QUERY = "Question: {question} Answer: {answer}".format(question=question, answer=choices[j])
+                    query = tokenizer.encode(
+                        NEW_QUERY
+                    )
+                    if len(query) > max_query_len:
+                        max_query_len = len(query)
+                sys_prompt_ids = tokenizer.encode(
+                    SYS_PROMPT
                 )
-                if len(query) > max_query_len:
-                    max_query_len = len(query)
-            sys_prompt_ids = tokenizer.encode(
-                SYS_PROMPT
-            )
-            sys_prompt_len = len(sys_prompt_ids)
-            sys_prompt_compress_ratio = ((sys_prompt_len + max_query_len) * prompt_compress_ratio - max_query_len) / sys_prompt_len
-            sys_prompt_compress_ratio = sys_prompt_compress_ratio if sys_prompt_compress_ratio > 0 else 0
-            # slm = torch.load("ELASTICLLM/train_slm/{}/slm_scorehead.pt".format(args.model)).cuda()
-            text = decision_head_tokenizer.encode(
-                SYS_PROMPT,
-                return_tensors='pt'
-            ).cuda()
+                sys_prompt_len = len(sys_prompt_ids)
+                sys_prompt_compress_ratio = ((sys_prompt_len + max_query_len) * prompt_compress_ratio - max_query_len) / sys_prompt_len
+                sys_prompt_compress_ratio = sys_prompt_compress_ratio if sys_prompt_compress_ratio > 0 else 0
 
-            scored_pred = torch.empty(0).cuda()
-            cur_pos = 0
-            while cur_pos < text.shape[-1]:
-                text_chunked = text[:, cur_pos:min(cur_pos+512, text.shape[-1])]
-                pred_chunked = slm(text_chunked).logits[:, :, 1].squeeze()
-                scored_pred = torch.cat((scored_pred, pred_chunked), dim=-1)
-                cur_pos += 512
-            pred, pred_indices = torch.sort(scored_pred)
-            # pred_indices = pred_indices[int(sys_prompt_compress_ratio*sys_prompt_len):]
-            pred_indices = pred_indices[:int(sys_prompt_compress_ratio*sys_prompt_len)+1]
+                # slm = torch.load("ELASTICLLM/train_slm/{}/slm_scorehead.pt".format(args.model)).cuda()
+                text = decision_head_tokenizer.encode(
+                    SYS_PROMPT,
+                    return_tensors='pt'
+                ).cuda()
+                pred = slm(text).logits[:, :, 1].squeeze()
+                pred, pred_indices = torch.sort(pred)
+                # print(sys_prompt_compress_ratio)
+                # pred_indices = pred_indices[int(sys_prompt_compress_ratio*sys_prompt_len):]
+                pred_indices = pred_indices[:int(sys_prompt_compress_ratio*sys_prompt_len)+1]
 
+                sys_prompt_compressed = []
+                for idx in range(sys_prompt_len):
+                    if idx in pred_indices:
+                        sys_prompt_compressed.append(sys_prompt_ids[idx])
+                
+                sys_prompt_compressed = decision_head_tokenizer.decode(
+                    sys_prompt_compressed
+                )
 
-            sys_prompt_compressed = []
-            for idx in range(sys_prompt_len):
-                if idx in pred_indices:
-                    sys_prompt_compressed.append(sys_prompt_ids[idx])
+                TEMPLATE = sys_prompt_compressed + QUERY
+            elif args.mode == "Lingua2+Contextual":
 
+                model_ratio = decode_slo
+                prompt_ratio = prefill_slo
+                from llmlingua import PromptCompressor
 
-            sys_prompt_compressed = decision_head_tokenizer.decode(
-                sys_prompt_compressed
-            )
+                ## Or use LLMLingua-2-small model
+                llm_lingua = PromptCompressor(
+                    model_name="microsoft/llmlingua-2-bert-base-multilingual-cased-meetingbank",
+                    use_llmlingua2=True, # Whether to use llmlingua-2
+                )
 
-            TEMPLATE = sys_prompt_compressed + QUERY
-        elif args.mode == "Lingua2+Contextual":                
-            from llmlingua import PromptCompressor
+                sys_prompt_compressed = llm_lingua.compress_prompt(SYS_PROMPT, rate=prompt_ratio, force_tokens = ['\n', '?'])['compressed_prompt']
+                TEMPLATE = sys_prompt_compressed + QUERY
 
-            ## Or use LLMLingua-2-small model
-            llm_lingua = PromptCompressor(
-                model_name="microsoft/llmlingua-2-bert-base-multilingual-cased-meetingbank",
-                use_llmlingua2=True, # Whether to use llmlingua-2
-            )
-
-            sys_prompt_compressed = llm_lingua.compress_prompt(SYS_PROMPT, rate=prompt_ratio, force_tokens = ['\n', '?'])['compressed_prompt']
-            TEMPLATE = sys_prompt_compressed + QUERY
-
-            import scores
-            import scores
-            if args.model == "orca3b-mini":
-                scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/orcamini/mlps.pt")
-            elif args.model == "llama3-instruct":
-                scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/llama3_instruct/mlps.pt")
+                import scores
+                import scores
+                if args.model == "orca3b-mini":
+                    scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/orcamini/mlps.pt")
+                elif args.model == "llama3-instruct":
+                    scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/llama3_instruct/mlps.pt")
+                else:
+                    scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/{}/mlps.pt".format(args.model))
+                scores.sparse.CONTEXTUAL_INFERENCE = True
+                scores.contextual.ratio = model_ratio
             else:
-                scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/{}/mlps.pt".format(args.model))
-            scores.sparse.CONTEXTUAL_INFERENCE = True
-            scores.contextual.ratio = model_ratio
-        else:
-            TEMPLATE = SYS_PROMPT + QUERY
+                if args.mode == "LayerReduction":
+                    if args.model == "llama":
 
 
-        prompt = TEMPLATE.format(question=val_df.iloc[i, 0])
-        
-        while len(tokenizer.encode(prompt)) + 1> 1900: # bos token
-            prompt_split = prompt.split("\n\n")
-            prompt_split.pop(1)
-            prompt = '\n\n'.join(prompt_split)
+                        layer_idx_ranks = [24, 28, 27, 22, 11, 17, 6, 26, 2, 21, 13, 19, 12, 15, 20, 23, 18, 14, 29, 25, 10, 3, 9, 16, 8, 30, 7, 4, 1, 0, 5, 31]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
 
-        choice = val_df.iloc[i, -1]
-        # create answers
-        batched_answers = []
-        generated_texts = []
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
 
-        for l in range(len(LABELS)):
-            answer = prompt + val_df.iloc[i, l+1]
-            batched_answers.append(answer)
-            generated_texts.append(val_df.iloc[i, l+1])
-        
-        inputs = tokenizer.batch_encode_plus(
-            batched_answers,
-            add_special_tokens=False,
-            padding=True,
-            return_tensors='pt'
-        )
-        generated_ids = tokenizer.batch_encode_plus(
-            generated_texts,
-            add_special_tokens=False,
-            padding=True,
-            return_tensors='pt'
-        )
-        
-        generated_tokens = generated_ids["input_ids"].cuda()
-        generated_mask = generated_ids["attention_mask"].cuda()
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
 
-        # we have to split the batch here due to the annoying OOM
-        max_generated_len = generated_ids["attention_mask"].shape[-1]
-        pos1 = 5
-        pos2 = 10
-        pos3 = 15
-        model_logits_batch1 = model(
-            inputs["input_ids"][:pos1, :-1].cuda(), 
-            attention_mask = inputs["attention_mask"][:pos1, :-1].cuda(),
-        ).logits
-        pred1 = F.log_softmax(
-            model_logits_batch1,
-            dim=-1
-        )
-        pred1 = pred1[:, -max_generated_len:, :]
-        pred = pred1
+                    if args.model == "llama3":
 
-        model_logits_batch2 = model(
-            inputs["input_ids"][pos1:pos2, :-1].cuda(), 
-            attention_mask = inputs["attention_mask"][pos1:pos2, :-1].cuda(),
-        ).logits
-        pred2 = F.log_softmax(
-            model_logits_batch2,
-            dim=-1
-        )
-        pred2 = pred2[:, -max_generated_len:, :]
-        pred = torch.cat((pred, pred2), dim=0)
-        del pred2
+                        layer_idx_ranks = [8, 26, 24, 23, 9, 12, 25, 19, 22, 13, 17, 21, 11, 10, 14, 20, 4, 15, 28, 6, 3, 18, 7, 16, 5, 27, 29, 2, 30, 31, 1, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
 
-        model_logits_batch3 = model(
-            inputs["input_ids"][pos2:pos3, :-1].cuda(), 
-            attention_mask = inputs["attention_mask"][pos2:pos3, :-1].cuda(),
-        ).logits
-        pred3 = F.log_softmax(
-            model_logits_batch3,
-            dim=-1
-        )
-        pred3 = pred3[:, -max_generated_len:, :]
-        pred = torch.cat((pred, pred3), dim=0)
-        del pred3
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
 
-        model_logits_batch4 = model(
-            inputs["input_ids"][pos3:, :-1].cuda(), 
-            attention_mask = inputs["attention_mask"][pos3:, :-1].cuda(),
-        ).logits
-        pred4 = F.log_softmax(
-            model_logits_batch4,
-            dim=-1
-        )
-        pred4 = pred4[:, -max_generated_len:, :]
-        pred = torch.cat((pred, pred4), dim=0)
-        del pred4
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
 
-        pred = pred[:, -max_generated_len:, :]
-        idx = generated_tokens.unsqueeze(2)
-        prob = torch.gather(pred, 2, idx).squeeze(-1)
-        # print(prob.shape)
-        # print(generated_mask.shape)
-        prob *= generated_mask
+                    if args.model == "llama3-instruct":
 
-        sumprobs = torch.sum(prob, dim=1)
-        sumprobs /= torch.sum(generated_mask, dim=1)
-        # print(sumprobs.shape)
-        # print(torch.topk(sumprobs.squeeze(), 5, dim=0))
-        top5_res = torch.topk(sumprobs.squeeze(), 5, dim=0)[-1]
-        # res = torch.argmax(sumprobs.squeeze(), dim=0)
-        # print(sumprobs)
-        for res in top5_res.tolist():
-            if LABELS[res] == choice:
+                        layer_idx_ranks = [26, 13, 25, 23, 8, 21, 12, 19, 15, 24, 10, 22, 17, 9, 11, 28, 14, 18, 20, 3, 7, 4, 16, 6, 5, 29, 27, 30, 2, 31, 1, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "vicuna":
+
+                        layer_idx_ranks = [12, 28, 7, 20, 29, 22, 10, 24, 27, 8, 30, 15, 6, 9, 26, 21, 18, 11, 25, 23, 5, 17, 16, 13, 14, 19, 4, 3, 2, 31, 1, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+                    if args.model == "orca3b-mini":
+
+                        layer_idx_ranks = [15, 14, 19, 12, 21, 22, 10, 8, 11, 3, 23, 17, 7, 9, 24, 5, 16, 18, 4, 20, 13, 6, 1, 25, 2, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*26):]
+
+                        for i in range(26):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                if args.mode == "LLMPruner":
+                    prune_ratio = prefill_slo
+                    if args.model == "llama":
+                        model = get_llama(model, prune_ratio)
+                    if args.model == "vicuna":
+                        model = get_vicuna(model, prune_ratio)
+                    if args.model == "orca3b-mini":
+                        model = get_orcamini(model, prune_ratio)
+                    if args.model == "llama3":
+                        model = get_llama3(model, prune_ratio)
+                    if args.model == "llama3-instruct":
+                        model = get_llama3_instruct(model, prune_ratio)
+
+                TEMPLATE = SYS_PROMPT + QUERY
+            # print(TEMPLATE)
+
+            prompt = TEMPLATE.format(question=question)
+            # create answers
+            batched_answers = []
+            generated_texts = []
+            for j in range(len(choices)):
+                answer = prompt + choices[j]
+                batched_answers.append(answer)
+                generated_texts.append(choices[j])
+
+            inputs = tokenizer.batch_encode_plus(
+                batched_answers,
+                add_special_tokens=False,
+                padding=True,
+                return_tensors='pt'
+            )
+            generated_ids = tokenizer.batch_encode_plus(
+                generated_texts,
+                add_special_tokens=False,
+                padding=True,
+                return_tensors='pt'
+            )
+
+            generated_tokens = generated_ids["input_ids"].cuda()
+            generated_mask = generated_ids["attention_mask"].cuda()
+            # print(inputs["input_ids"])
+            pred = F.log_softmax(
+                model(
+                    inputs["input_ids"][:, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][:, :-1].cuda(),
+                ).logits,
+                dim=-1
+            )
+            max_generated_len = generated_ids["attention_mask"].shape[-1]
+            pred = pred[:, -max_generated_len:, :]
+            idx = generated_tokens.unsqueeze(2)
+            prob = torch.gather(pred, 2, idx).squeeze(-1)
+            # print(prob.shape)
+            # print(generated_mask.shape)
+            prob *= generated_mask
+
+            sumprobs = torch.sum(prob, dim=1)
+            sumprobs /= torch.sum(generated_mask, dim=1)
+            res = torch.argmax(sumprobs.squeeze(), dim=0)
+            # print(sumprobs)
+            if LABELS[res] == groundtruth or LABELS_NUMBER[res] == groundtruth:
                 num_right += 1
-print(num_right/len(val_df))
+
+    if dataset == 'octopus':
+        data_dir = "ELASTICLLM/Data/Octopus_refined"
+        task = "android_benchmark"
+        dev_df = pd.read_csv(os.path.join(data_dir, "dev", task + ".csv"), header=None)
+        val_df = pd.read_csv(os.path.join(data_dir, "val", task + ".csv"), header=None)
+
+        with open(data_dir + '/functions_simple.txt', 'r') as file:
+            doc = file.read()
+
+        LABELS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U"]
+
+        SYS_PROMPT = ""
+        SYS_PROMPT += "You are a smart assistant that helps human sloving problems. You help them by answering questions."
+        SYS_PROMPT += "\n{functions}".format(functions=doc)
+
+        SYS_PROMPT += "\nExamples:"
+
+        for i in range(len(dev_df)):
+            q, c = dev_df.iloc[i, 0], dev_df.iloc[i, -1]
+            SYS_PROMPT += "\nQuestion: {question} Answer: {answer}".format(question=q, answer=dev_df.iloc[i, ord(c)-ord('A')+1])
+            if i==5:
+                break
+
+        QUERY = "\nQuestion: {question}"
+        QUERY += "Answer:"
+
+        if args.refinement != 0.0:
+            SYS_PROMPT = refine_prompt_with_llmlingua2(SYS_PROMPT, args.refinement)
+
+        model = model.eval()
+        with torch.no_grad():
+            # compress the prompt
+            if args.mode == "Ours": 
+
+                # decision_head = torch.load("ELASTICLLM/train_slm/{}/slm_decisionhead_llama.pt".format(args.model)).cuda()
+                # decision_head_tokenizer = AutoTokenizer.from_pretrained("google/mobilebert-uncased")
+                special_tokens_dict = {'additional_special_tokens': PREFILL_SLO + DECODE_SLO}
+                num_added_toks = decision_head_tokenizer.add_special_tokens(special_tokens_dict)
+                decision_text = prefill_dict[prefill_slo] + " " + decode_dict[decode_slo] + " " + SYS_PROMPT + QUERY
+                
+                decision_head_input = decision_head_tokenizer.encode(
+                    decision_text,
+                    return_tensors='pt'
+                ).cuda()
+                if decision_head_input.shape[-1] > 512:
+                    decision_head_input = decision_head_input[:, :512]
+
+                prompt_ratio, model_ratio = decision_head(decision_head_input)
+
+                prompt_ratio = prompt_ratios[torch.argmax(prompt_ratio.squeeze()).item()]
+                model_ratio = model_ratios[torch.argmax(model_ratio.squeeze()).item()]
+
+                if prompt_ratio * model_ratio > prefill_slo or model_ratio > decode_slo:
+                    model_ratio = 1.0
+                    for r in model_ratios:
+                        if prompt_ratio * r <= prefill_slo and r <= decode_slo:
+                            model_ratio = r
+
+                prompt_compress_ratio = prompt_ratio
+
+                if args.model == "llama":
+                    model = get_llama(model, model_ratio)
+                if args.model == "vicuna":
+                    model = get_vicuna(model, model_ratio)
+                if args.model == "orca3b-mini":
+                    model = get_orcamini(model, model_ratio)
+                if args.model == "llama3":
+                    model = get_llama3(model, model_ratio)
+                if args.model == "llama3-instruct":
+                    model = get_llama3_instruct(model, model_ratio)
+
+                max_query_len = 0
+                for j in range(len(choices)):
+                    NEW_QUERY = "Question: {question} Answer: {answer}".format(question=question, answer=choices[j])
+                    query = tokenizer.encode(
+                        NEW_QUERY
+                    )
+                    if len(query) > max_query_len:
+                        max_query_len = len(query)
+                sys_prompt_ids = tokenizer.encode(
+                    SYS_PROMPT
+                )
+                sys_prompt_len = len(sys_prompt_ids)
+                sys_prompt_compress_ratio = ((sys_prompt_len + max_query_len) * prompt_compress_ratio - max_query_len) / sys_prompt_len
+                sys_prompt_compress_ratio = sys_prompt_compress_ratio if sys_prompt_compress_ratio > 0 else 0
+
+                # slm = torch.load("ELASTICLLM/train_slm/{}/slm_scorehead.pt".format(args.model)).cuda()
+                text = decision_head_tokenizer.encode(
+                    SYS_PROMPT,
+                    return_tensors='pt'
+                ).cuda()
+
+                scored_pred = torch.empty(0).cuda()
+                cur_pos = 0
+                while cur_pos < text.shape[-1]:
+                    text_chunked = text[:, cur_pos:min(cur_pos+512, text.shape[-1])]
+                    pred_chunked = slm(text_chunked).logits[:, :, 1].squeeze()
+                    scored_pred = torch.cat((scored_pred, pred_chunked), dim=-1)
+                    cur_pos += 512
+                pred, pred_indices = torch.sort(scored_pred)
+
+                # print(sys_prompt_compress_ratio)
+                # pred_indices = pred_indices[int(sys_prompt_compress_ratio*sys_prompt_len):]
+                pred_indices = pred_indices[:int(sys_prompt_compress_ratio*sys_prompt_len)+1]
+
+                sys_prompt_compressed = []
+                for idx in range(sys_prompt_len):
+                    if idx in pred_indices:
+                        sys_prompt_compressed.append(sys_prompt_ids[idx])
+                
+                sys_prompt_compressed = decision_head_tokenizer.decode(
+                    sys_prompt_compressed
+                )
+
+                TEMPLATE = sys_prompt_compressed + QUERY
+            elif args.mode == "Lingua2+Contextual":
+
+                model_ratio = decode_slo
+                prompt_ratio = prefill_slo
+                from llmlingua import PromptCompressor
+
+                ## Or use LLMLingua-2-small model
+                llm_lingua = PromptCompressor(
+                    model_name="microsoft/llmlingua-2-bert-base-multilingual-cased-meetingbank",
+                    use_llmlingua2=True, # Whether to use llmlingua-2
+                )
+
+                sys_prompt_compressed = llm_lingua.compress_prompt(SYS_PROMPT, rate=prompt_ratio, force_tokens = ['\n', '?'])['compressed_prompt']
+                TEMPLATE = sys_prompt_compressed + QUERY
+
+                import scores
+                import scores
+                if args.model == "orca3b-mini":
+                    scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/orcamini/mlps.pt")
+                elif args.model == "llama3-instruct":
+                    scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/llama3_instruct/mlps.pt")
+                else:
+                    scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/{}/mlps.pt".format(args.model))
+                scores.sparse.CONTEXTUAL_INFERENCE = True
+                scores.contextual.ratio = model_ratio
+            else:
+                if args.mode == "LayerReduction":
+                    if args.model == "llama":
+
+
+                        layer_idx_ranks = [24, 28, 27, 22, 11, 17, 6, 26, 2, 21, 13, 19, 12, 15, 20, 23, 18, 14, 29, 25, 10, 3, 9, 16, 8, 30, 7, 4, 1, 0, 5, 31]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "llama3":
+
+                        layer_idx_ranks = [8, 26, 24, 23, 9, 12, 25, 19, 22, 13, 17, 21, 11, 10, 14, 20, 4, 15, 28, 6, 3, 18, 7, 16, 5, 27, 29, 2, 30, 31, 1, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "llama3-instruct":
+
+                        layer_idx_ranks = [26, 13, 25, 23, 8, 21, 12, 19, 15, 24, 10, 22, 17, 9, 11, 28, 14, 18, 20, 3, 7, 4, 16, 6, 5, 29, 27, 30, 2, 31, 1, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "vicuna":
+
+                        layer_idx_ranks = [12, 28, 7, 20, 29, 22, 10, 24, 27, 8, 30, 15, 6, 9, 26, 21, 18, 11, 25, 23, 5, 17, 16, 13, 14, 19, 4, 3, 2, 31, 1, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+                    if args.model == "orca3b-mini":
+
+                        layer_idx_ranks = [15, 14, 19, 12, 21, 22, 10, 8, 11, 3, 23, 17, 7, 9, 24, 5, 16, 18, 4, 20, 13, 6, 1, 25, 2, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*26):]
+
+                        for i in range(26):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                if args.mode == "LLMPruner":
+                    prune_ratio = prefill_slo
+                    if args.model == "llama":
+                        model = get_llama(model, prune_ratio)
+                    if args.model == "vicuna":
+                        model = get_vicuna(model, prune_ratio)
+                    if args.model == "orca3b-mini":
+                        model = get_orcamini(model, prune_ratio)
+                    if args.model == "llama3":
+                        model = get_llama3(model, prune_ratio)
+                    if args.model == "llama3-instruct":
+                        model = get_llama3_instruct(model, prune_ratio)
+
+                TEMPLATE = SYS_PROMPT + QUERY
+
+            prompt = TEMPLATE.format(question=question)
+            
+            while len(tokenizer.encode(prompt)) + 1> 1900: # bos token
+                prompt_split = prompt.split("\n\n")
+                prompt_split.pop(1)
+                prompt = '\n\n'.join(prompt_split)
+
+            # create answers
+            batched_answers = []
+            generated_texts = []
+
+            for l in range(len(LABELS)):
+                answer = prompt + choices[l]
+                batched_answers.append(answer)
+                generated_texts.append(choices[l])
+            
+            inputs = tokenizer.batch_encode_plus(
+                batched_answers,
+                add_special_tokens=False,
+                padding=True,
+                return_tensors='pt'
+            )
+            generated_ids = tokenizer.batch_encode_plus(
+                generated_texts,
+                add_special_tokens=False,
+                padding=True,
+                return_tensors='pt'
+            )
+            
+            generated_tokens = generated_ids["input_ids"].cuda()
+            generated_mask = generated_ids["attention_mask"].cuda()
+
+            # we have to split the batch here due to the annoying OOM
+            max_generated_len = generated_ids["attention_mask"].shape[-1]
+            pos1 = 5
+            pos2 = 10
+            pos3 = 15
+            model_logits_batch1 = model(
+                inputs["input_ids"][:pos1, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][:pos1, :-1].cuda(),
+            ).logits
+            pred1 = F.log_softmax(
+                model_logits_batch1,
+                dim=-1
+            )
+            pred1 = pred1[:, -max_generated_len:, :]
+            pred = pred1
+
+            model_logits_batch2 = model(
+                inputs["input_ids"][pos1:pos2, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][pos1:pos2, :-1].cuda(),
+            ).logits
+            pred2 = F.log_softmax(
+                model_logits_batch2,
+                dim=-1
+            )
+            pred2 = pred2[:, -max_generated_len:, :]
+            pred = torch.cat((pred, pred2), dim=0)
+            del pred2
+
+            model_logits_batch3 = model(
+                inputs["input_ids"][pos2:pos3, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][pos2:pos3, :-1].cuda(),
+            ).logits
+            pred3 = F.log_softmax(
+                model_logits_batch3,
+                dim=-1
+            )
+            pred3 = pred3[:, -max_generated_len:, :]
+            pred = torch.cat((pred, pred3), dim=0)
+            del pred3
+
+            model_logits_batch4 = model(
+                inputs["input_ids"][pos3:, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][pos3:, :-1].cuda(),
+            ).logits
+            pred4 = F.log_softmax(
+                model_logits_batch4,
+                dim=-1
+            )
+            pred4 = pred4[:, -max_generated_len:, :]
+            pred = torch.cat((pred, pred4), dim=0)
+            del pred4
+
+            pred = pred[:, -max_generated_len:, :]
+            idx = generated_tokens.unsqueeze(2)
+            prob = torch.gather(pred, 2, idx).squeeze(-1)
+            # print(prob.shape)
+            # print(generated_mask.shape)
+            prob *= generated_mask
+
+            sumprobs = torch.sum(prob, dim=1)
+            sumprobs /= torch.sum(generated_mask, dim=1)
+            # print(sumprobs.shape)
+            # print(torch.topk(sumprobs.squeeze(), 5, dim=0))
+            top5_res = torch.topk(sumprobs.squeeze(), 5, dim=0)[-1]
+            # res = torch.argmax(sumprobs.squeeze(), dim=0)
+            # print(sumprobs)
+            for res in top5_res.tolist():
+                if LABELS[res] == groundtruth:
+                    num_right += 1
+
+    if dataset == 'llamatouch':
+
+        data_dir = "ELASTICLLM/Data/LlamaTouch"
+        task = "llamatouch_task_metadata"
+
+        dev_df = pd.read_csv(os.path.join(data_dir, "dev", task + ".tsv"), sep='\t', header=None)
+        val_df = pd.read_csv(os.path.join(data_dir, "test", task + ".tsv"), sep='\t', header=None)
+
+        apps_doc = "\nSelectable apps:"
+        for a in choices:
+            apps_doc += a
+
+        SYS_PROMPT = ""
+        SYS_PROMPT += "You are a smart assistant that helps human sloving problems. You help them by answering questions."
+        SYS_PROMPT += "The following is an instruction to manipulate UI states. You should select apps to operate."
+        SYS_PROMPT += apps_doc
+        SYS_PROMPT += "\nExamples:"
+
+        res_accs = []
+
+        for i in range(len(dev_df)):
+            q, c = dev_df.iloc[i, 0], dev_df.iloc[i, -1]
+            SYS_PROMPT += "\nQuestion: {question} Answer: {answer}".format(question=q, answer=str(c))
+            if i==5:
+                break
+
+        if args.refinement != 0.0:
+            SYS_PROMPT = refine_prompt_with_llmlingua2(SYS_PROMPT, args.refinement)
+        QUERY = "\nQuestion: {question}"
+        QUERY += "Answer:"
+
+        model = model.eval()
+        with torch.no_grad():
+            # compress the prompt
+            if args.mode == "Ours": 
+
+                # decision_head = torch.load("ELASTICLLM/train_slm/{}/slm_decisionhead_llama.pt".format(args.model)).cuda()
+                # decision_head_tokenizer = AutoTokenizer.from_pretrained("google/mobilebert-uncased")
+                special_tokens_dict = {'additional_special_tokens': PREFILL_SLO + DECODE_SLO}
+                num_added_toks = decision_head_tokenizer.add_special_tokens(special_tokens_dict)
+                decision_text = prefill_dict[prefill_slo] + " " + decode_dict[decode_slo] + " " + SYS_PROMPT + QUERY
+                
+                decision_head_input = decision_head_tokenizer.encode(
+                    decision_text,
+                    return_tensors='pt'
+                ).cuda()
+                if decision_head_input.shape[-1] > 512:
+                    decision_head_input = decision_head_input[:, :512]
+
+                prompt_ratio, model_ratio = decision_head(decision_head_input)
+
+                prompt_ratio = prompt_ratios[torch.argmax(prompt_ratio.squeeze()).item()]
+                model_ratio = model_ratios[torch.argmax(model_ratio.squeeze()).item()]
+
+                if prompt_ratio * model_ratio > prefill_slo or model_ratio > decode_slo:
+                    model_ratio = 1.0
+                    for r in model_ratios:
+                        if prompt_ratio * r <= prefill_slo and r <= decode_slo:
+                            model_ratio = r
+
+                prompt_compress_ratio = prompt_ratio
+
+                if args.model == "llama":
+                    model = get_llama(model, model_ratio)
+                if args.model == "vicuna":
+                    model = get_vicuna(model, model_ratio)
+                if args.model == "orca3b-mini":
+                    model = get_orcamini(model, model_ratio)
+                if args.model == "llama3":
+                    model = get_llama3(model, model_ratio)
+                if args.model == "llama3-instruct":
+                    model = get_llama3_instruct(model, model_ratio)
+
+                max_query_len = 0
+                for j in range(len(choices)):
+                    NEW_QUERY = "Question: {question} Answer: {answer}".format(question=question, answer=choices[j])
+                    query = tokenizer.encode(
+                        NEW_QUERY
+                    )
+                    if len(query) > max_query_len:
+                        max_query_len = len(query)
+                sys_prompt_ids = tokenizer.encode(
+                    SYS_PROMPT
+                )
+                sys_prompt_len = len(sys_prompt_ids)
+                sys_prompt_compress_ratio = ((sys_prompt_len + max_query_len) * prompt_compress_ratio - max_query_len) / sys_prompt_len
+                sys_prompt_compress_ratio = sys_prompt_compress_ratio if sys_prompt_compress_ratio > 0 else 0
+
+                # slm = torch.load("ELASTICLLM/train_slm/{}/slm_scorehead.pt".format(args.model)).cuda()
+                text = decision_head_tokenizer.encode(
+                    SYS_PROMPT,
+                    return_tensors='pt'
+                ).cuda()
+
+                scored_pred = torch.empty(0).cuda()
+                cur_pos = 0
+                while cur_pos < text.shape[-1]:
+                    text_chunked = text[:, cur_pos:min(cur_pos+512, text.shape[-1])]
+                    pred_chunked = slm(text_chunked).logits[:, :, 1].squeeze()
+                    scored_pred = torch.cat((scored_pred, pred_chunked), dim=-1)
+                    cur_pos += 512
+                pred, pred_indices = torch.sort(scored_pred)
+
+                # print(sys_prompt_compress_ratio)
+                # pred_indices = pred_indices[int(sys_prompt_compress_ratio*sys_prompt_len):]
+                pred_indices = pred_indices[:int(sys_prompt_compress_ratio*sys_prompt_len)+1]
+
+                sys_prompt_compressed = []
+                for idx in range(sys_prompt_len):
+                    if idx in pred_indices:
+                        sys_prompt_compressed.append(sys_prompt_ids[idx])
+                
+                sys_prompt_compressed = decision_head_tokenizer.decode(
+                    sys_prompt_compressed
+                )
+
+                TEMPLATE = sys_prompt_compressed + QUERY
+            elif args.mode == "Lingua2+Contextual":
+
+                model_ratio = decode_slo
+                prompt_ratio = prefill_slo
+
+                from llmlingua import PromptCompressor
+
+                ## Or use LLMLingua-2-small model
+                llm_lingua = PromptCompressor(
+                    model_name="microsoft/llmlingua-2-bert-base-multilingual-cased-meetingbank",
+                    use_llmlingua2=True, # Whether to use llmlingua-2
+                )
+
+                sys_prompt_compressed = llm_lingua.compress_prompt(SYS_PROMPT, rate=prompt_ratio, force_tokens = ['\n', '?'])['compressed_prompt']
+                TEMPLATE = sys_prompt_compressed + QUERY
+
+                import scores
+                import scores
+                if args.model == "orca3b-mini":
+                    scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/orcamini/mlps.pt")
+                elif args.model == "llama3-instruct":
+                    scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/llama3_instruct/mlps.pt")
+                else:
+                    scores.contextual.predictor = torch.load("ELASTICLLM/Contextual_sparsity/predictors/{}/mlps.pt".format(args.model))
+                scores.sparse.CONTEXTUAL_INFERENCE = True
+                scores.contextual.ratio = model_ratio
+            else: 
+                if args.mode == "LayerReduction":
+                    if args.model == "llama":
+
+
+                        layer_idx_ranks = [24, 28, 27, 22, 11, 17, 6, 26, 2, 21, 13, 19, 12, 15, 20, 23, 18, 14, 29, 25, 10, 3, 9, 16, 8, 30, 7, 4, 1, 0, 5, 31]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "llama3":
+
+                        layer_idx_ranks = [8, 26, 24, 23, 9, 12, 25, 19, 22, 13, 17, 21, 11, 10, 14, 20, 4, 15, 28, 6, 3, 18, 7, 16, 5, 27, 29, 2, 30, 31, 1, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "llama3-instruct":
+
+                        layer_idx_ranks = [26, 13, 25, 23, 8, 21, 12, 19, 15, 24, 10, 22, 17, 9, 11, 28, 14, 18, 20, 3, 7, 4, 16, 6, 5, 29, 27, 30, 2, 31, 1, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "vicuna":
+
+                        layer_idx_ranks = [12, 28, 7, 20, 29, 22, 10, 24, 27, 8, 30, 15, 6, 9, 26, 21, 18, 11, 25, 23, 5, 17, 16, 13, 14, 19, 4, 3, 2, 31, 1, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+                    if args.model == "orca3b-mini":
+
+                        layer_idx_ranks = [15, 14, 19, 12, 21, 22, 10, 8, 11, 3, 23, 17, 7, 9, 24, 5, 16, 18, 4, 20, 13, 6, 1, 25, 2, 0]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*26):]
+
+                        for i in range(26):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                if args.mode == "LLMPruner":
+                    prune_ratio = prefill_slo
+                    if args.model == "llama":
+                        model = get_llama(model, prune_ratio)
+                    if args.model == "vicuna":
+                        model = get_vicuna(model, prune_ratio)
+                    if args.model == "orca3b-mini":
+                        model = get_orcamini(model, prune_ratio)
+                    if args.model == "llama3":
+                        model = get_llama3(model, prune_ratio)
+                    if args.model == "llama3-instruct":
+                        model = get_llama3_instruct(model, prune_ratio)
+
+                TEMPLATE = SYS_PROMPT + QUERY
+
+            prompt = TEMPLATE.format(question=question)
+            
+            # create answers
+            batched_answers = []
+            generated_texts = []
+
+            for l in choices:
+                answer = prompt + str(l)
+                batched_answers.append(answer)
+                generated_texts.append(str(l))
+            
+            inputs = tokenizer.batch_encode_plus(
+                batched_answers,
+                add_special_tokens=False,
+                padding=True,
+                return_tensors='pt'
+            )
+            generated_ids = tokenizer.batch_encode_plus(
+                generated_texts,
+                add_special_tokens=False,
+                padding=True,
+                return_tensors='pt'
+            )
+            
+            generated_tokens = generated_ids["input_ids"].cuda()
+            generated_mask = generated_ids["attention_mask"].cuda()
+
+            # we have to split the batch here due to the annoying OOM
+            max_generated_len = generated_ids["attention_mask"].shape[-1]
+
+            pos1 = 10
+            pos2 = 20
+            pos3 = 30
+            pos4 = 40
+            pos5 = 50
+            pos6 = 60
+            model_logits_batch1 = model(
+                inputs["input_ids"][:pos1, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][:pos1, :-1].cuda(),
+            ).logits
+            pred1 = F.log_softmax(
+                model_logits_batch1,
+                dim=-1
+            )
+            pred1 = pred1[:, -max_generated_len:, :]
+            pred = pred1
+            del pred1
+            del model_logits_batch1
+
+            model_logits_batch2 = model(
+                inputs["input_ids"][pos1:pos2, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][pos1:pos2, :-1].cuda(),
+            ).logits
+            pred2 = F.log_softmax(
+                model_logits_batch2,
+                dim=-1
+            )
+
+            pred2 = pred2[:, -max_generated_len:, :]
+            pred = torch.cat((pred, pred2), dim=0)
+            del pred2
+
+            model_logits_batch3 = model(
+                inputs["input_ids"][pos2:pos3, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][pos2:pos3, :-1].cuda(),
+            ).logits
+            pred3 = F.log_softmax(
+                model_logits_batch3,
+                dim=-1
+            )
+            pred3 = pred3[:, -max_generated_len:, :]
+            pred = torch.cat((pred, pred3), dim=0)
+            del pred3
+
+            model_logits_batch4 = model(
+                inputs["input_ids"][pos3:pos4, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][pos3:pos4, :-1].cuda(),
+            ).logits
+            pred4 = F.log_softmax(
+                model_logits_batch4,
+                dim=-1
+            )
+            pred4 = pred4[:, -max_generated_len:, :]
+            pred = torch.cat((pred, pred4), dim=0)
+            del pred4
+
+            model_logits_batch5 = model(
+                inputs["input_ids"][pos4:pos5, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][pos4:pos5, :-1].cuda(),
+            ).logits
+            pred5 = F.log_softmax(
+                model_logits_batch5,
+                dim=-1
+            )
+            pred5 = pred5[:, -max_generated_len:, :]
+            pred = torch.cat((pred, pred5), dim=0)
+            del pred5
+
+            model_logits_batch6 = model(
+                inputs["input_ids"][pos5:pos6, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][pos5:pos6, :-1].cuda(),
+            ).logits
+            pred6 = F.log_softmax(
+                model_logits_batch6,
+                dim=-1
+            )
+            pred6 = pred6[:, -max_generated_len:, :]
+            pred = torch.cat((pred, pred6), dim=0)
+            del pred6
+
+            model_logits_batch7 = model(
+                inputs["input_ids"][pos6:, :-1].cuda(), 
+                attention_mask = inputs["attention_mask"][pos6:, :-1].cuda(),
+            ).logits
+            pred7 = F.log_softmax(
+                model_logits_batch7,
+                dim=-1
+            )
+            pred7 = pred7[:, -max_generated_len:, :]
+            pred = torch.cat((pred, pred7), dim=0)
+            del pred7
+
+            pred = pred[:, -max_generated_len:, :]
+            idx = generated_tokens.unsqueeze(2)
+            prob = torch.gather(pred, 2, idx).squeeze(-1)
+            # print(prob.shape)
+            # print(generated_mask.shape)
+            prob *= generated_mask
+
+            sumprobs = torch.sum(prob, dim=1)
+            sumprobs /= torch.sum(generated_mask, dim=1)
+            # print(sumprobs.shape)
+            # print(torch.topk(sumprobs.squeeze(), 5, dim=0))
+            res = torch.argmax(sumprobs.squeeze(), dim=0)
+            # res = torch.argmax(sumprobs.squeeze(), dim=0)
+            # print(sumprobs)
+            if choices[res] == groundtruth:
+                num_right += 1
+
+print(num_right/600)
 
 with open(args.res_save_pth, 'a') as file:
-    file.write('Octopus {} {} {} {} {}\n'.format(
-        args.model,
-        args.mode,
-        args.prefill_SLO,
-        args.decode_SLO,
-        str(num_right/len(val_df))))
+    file.write('alpha={} {} {} {}\n'.format(
+            args.alpha,
+            args.model,
+            args.mode,
+            num_right/600
+        )
+    )

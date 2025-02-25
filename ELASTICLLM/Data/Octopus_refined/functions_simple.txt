@@ -1,0 +1,59 @@
+function name: take a photo
+description: Captures a photo using the specified camera and resolution settings.
+
+function name: get trending news
+description: Retrieves a collection of trending news articles relevant to a specified query and language.
+
+function name: get weather forecast
+description: Provides a weather forecast for a specified location over a given number of days. Each day's forecast includes a brief description of the expected weather conditions.
+
+function name: send email
+description: Sends an email to a specified recipient with a given title and content.
+
+function name: search youtube videos
+description: Searches YouTube for videos matching a query.
+
+function name: find route google_maps
+description: Computes a route using Google Maps from an origin to a destination.
+
+function name: check nest smoke detector status
+description: Check the current status of a Nest Smoke Detector.
+
+function name: send text message
+description: Sends a text message to the specified contact.
+
+function name: make phone call
+description: Initiates a phone call to the given phone number. It can handle both international and domestic numbers.
+
+function name: create contact
+description: Creates a new contact entry in the device's address book.
+
+function name: set timer alarm
+description: Sets a timer or alarm for a specified time.
+
+function name: change screen brightness
+description: Adjust the device's screen brightness level.
+
+function name: create calendar event
+description: Schedules a new event in the calendar.
+
+function name: set volume
+description: Sets the volume level for a specified type : "ring" , "media" , "alarm".
+
+function name: connect to bluetooth device
+description: Attempts to connect to a specified Bluetooth device within a given timeout.
+
+function name: enable do not disturb
+description: Toggles the Do Not Disturb mode on or off.
+
+function name: set nest temperature
+description: Sets a Nest Thermostat to a desired temperature.
+
+function name: play music on nest hub
+description: Streams music on a Google Nest Audio device from a specified service.
+
+function name: play video on nest hub
+description: Streams video on a Google Nest Hub device from a specified service.
+
+function name: open_or_lock_door(status):
+description: Opens or locks a door using a Google-compatible smart lock.

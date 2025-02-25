@@ -1,0 +1,238 @@
+def take_a_photo(camera):
+    """
+    Captures a photo using the specified camera and resolution settings.
+
+    Parameters:
+    - camera (str): Specifies the camera to use. Can be 'front' or 'back'. The default is 'back'.
+
+    Returns:
+    - str: The string contains the file path of the captured photo if successful, or an error message if not. Example: '/storage/emulated/0/Pictures/MyApp/IMG_20240310_123456.jpg'
+    """
+
+
+def get_trending_news(query, language):
+    """
+    Retrieves a collection of trending news articles relevant to a specified query and language.
+
+    Parameters:
+    - query (str): Topic for news articles.
+    - language (str): ISO 639-1 language code. The default language is English ('en'), but it can be set to any valid ISO 639-1 code to accommodate different language preferences (e.g., 'es' for Spanish, 'fr' for French).
+
+    Returns:
+    - list[str]: A list of strings, where each string represents a single news article. Each article representation includes the article's title and its URL, allowing users to easily access the full article for detailed information.
+    """
+
+
+def get_weather_forecast(location):
+    """
+    Provides a weather forecast for a specified location over a given number of days. Each day's forecast includes a brief description of the expected weather conditions.
+
+    Parameters:
+    - location (str): The location for which the weather forecast is desired. Can be a city name, ZIP code, or other location identifiers.
+
+    Returns:
+    - list[str]: A list of strings, each representing the weather forecast for one day. Each string includes the date and a brief description of the weather conditions. Formatted in 'YYYY-MM-DD: Description' format.
+    """
+
+
+def send_email(recipient, title, content):
+    """
+    Sends an email to a specified recipient with a given title and content.
+
+    Parameters:
+    - recipient (str): The email address of the recipient.
+    - title (str): The subject line of the email. This is a brief summary or title of the email's purpose or content.
+    - content (str): The main body text of the email. It contains the primary message, information, or content that is intended to be communicated to the recipient.
+
+    Returns:
+    """
+
+
+def search_youtube_videos(query):
+    """
+    Searches YouTube for videos matching a query.
+
+    Parameters:
+    - query (str): Search query.
+
+    Returns:
+    - list[str]: A list of strings, each string includes video names and URLs.
+    """
+
+
+def find_route_google_maps(origin, destination, mode):
+    """
+    Computes a route using Google Maps from an origin to a destination.
+
+    Parameters:
+    - origin (str): Starting location.
+    - destination (str): Target location.
+    - mode (enum): Mode of transportation, options include 'driving', 'walking', 'bicycling', and 'transit'. The default mode is 'driving'.
+
+    Returns:
+    - List[str]:  The string provides the route details.
+    """
+
+
+def check_nest_smoke_detector_status():
+    """
+    Check the current status of a Nest Smoke Detector.
+
+    Parameters:
+
+    Returns:
+    - str: A message with the detailed smoke detector status. This message includes information about battery level, sensor functionality, and connectivity status.
+    """
+
+
+def send_text_message(contact_name, message):
+    """
+    Sends a text message to the specified contact.
+
+    Parameters:
+    - contact_name (str): The name of the recipient contact.
+    - message (str): The content of the message to be sent. This is what the recipient will receive.
+
+    Returns:
+    """
+
+
+def make_phone_call(phone_number):
+    """
+    Initiates a phone call to the given phone number. It can handle both international and domestic numbers.
+
+    Parameters:
+    - phone_number (str): phone number of the contact. The phone number should be provided in a standard format, preferably in E.164 format (e.g., +12345678900 for an international format).
+
+    Returns:
+    """
+
+
+def create_contact(name, phone_number):
+    """
+    Creates a new contact entry in the device's address book.
+
+    Parameters:
+    - name (str): Full name of the contact. This should include first and last name.
+    - phone_number (str): phone number of the contact. The phone number should be provided in a standard format, preferably in E.164 format (e.g., +12345678900 for an international format).
+
+    Returns:
+    """
+
+
+def set_timer_alarm(time, label):
+    """
+    Sets a timer or alarm for a specified time.
+
+    Parameters:
+    - time (str): Alarm time in "HH:MM" 24-hour format. For example, "07:12" for 7:12 AM.
+    - label (str): Custom label for the alarm, default is "alarm".
+
+    Returns:
+    """
+
+
+def change_screen_brightness(level):
+    """
+    Adjust the device's screen brightness level.
+
+    Parameters:
+    - level (int): Desired brightness level, on a scale from 0 (minimum) to 10 (maximum).
+
+    Returns:
+    """
+
+
+def create_calendar_event(title, start_time, end_time):
+    """
+    Schedules a new event in the calendar.
+
+    Parameters:
+    - title (str): Event title.
+    - start_time (str): Event start time as a string in ISO 8601 format "YYYY-MM-DD-HH-MM". For example, "2022-12-31-23-59" for 11:59 PM on December 31, 2022.
+    - end_time (str): Event end time as a string in ISO 8601 format "YYYY-MM-DD-HH-MM". Must be after start_time. For example, "2023-01-01-00-00" for 12:00 AM on January 1, 2023.
+
+    Returns:
+    """
+
+
+def set_volume(level, volume_type):
+    """
+    Sets the volume level for a specified type : "ring" , "media" , "alarm".
+
+    Parameters:
+    - level (int): Target volume level, from 0 (mute) to 10 (maximum).
+    - volume_type (enum): The category of volume to adjust, select from "ring" , "media" , "alarm".
+
+    Returns:
+    """
+
+
+def connect_to_bluetooth_device(device_name, timeout):
+    """
+    Attempts to connect to a specified Bluetooth device within a given timeout.
+
+    Parameters:
+    - device_name (str): The name of the Bluetooth device to connect to.
+    - timeout (int): The maximum time, in seconds, to attempt a connection. The default is 10 seconds.
+
+    Returns:
+    - bool: Returns True if the device was successfully connected within the timeout period, False otherwise.
+    """
+
+
+def enable_do_not_disturb(enabled):
+    """
+    Toggles the Do Not Disturb mode on or off.
+
+    Parameters:
+    - enabled (bool): True to enable, False to disable Do Not Disturb mode.
+
+    Returns:
+    """
+
+
+def set_nest_temperature(target_temperature):
+    """
+    Sets a Nest Thermostat to a desired temperature.
+
+    Parameters:
+    - target_temperature (float): Target temperature in degrees Fahrenheit, ranging from 50 to 90.
+
+    Returns:
+    """
+
+
+def play_music_on_nest_hub(music_service, music_name):
+    """
+    Streams music on a Google Nest Audio device from a specified service.
+
+    Parameters:
+    - music_service (str): Music streaming service name.
+    - music_name (str): Playlist name to play.
+
+    Returns:
+    """
+
+
+def play_video_on_nest_hub(video_service, video_name):
+    """
+    Streams video on a Google Nest Hub device from a specified service.
+
+    Parameters:
+    - video_service (str): Video streaming service name.
+    - video_name (str): Video playlist name to play.
+
+    Returns:
+    """
+
+
+def open_or_lock_door(status):
+    """
+    Opens or locks a door using a Google-compatible smart lock.
+
+    Parameters:
+    - status (enum): Desired action, chosen from 'open' or 'lock'.
+
+    Returns:
+    """

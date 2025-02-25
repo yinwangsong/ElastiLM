@@ -81,7 +81,7 @@ bash LLMPruner/scripts/02.sh 0
 bash LLMPruner/scripts/03.sh 0
 bash LLMPruner/scripts/04.sh 0
 ...
-bash LLMPruner/scripts/05.sh 0
+bash LLMPruner/scripts/09.sh 0
 ```
 
 After profiling, the importance scores will be generated in `ELASTICLLM/imp/`.
@@ -118,7 +118,29 @@ Advanced layer pruning methods.
 
 ```
 
-### The experiments
+### Experiments on standalone dataset
+
+### Experiments on end-to-end traces
+
+Firstly, synthesize the traces.
+
+```
+python3 ELASTICLLM/e2e/traces/generate_traces.py
+```
+
+You will see `trace_0.json`, `trace_0.25.json` and `trace_-0.25.json` under the same directory. 
+The number (e.g., `0`) means the skewness of the trace.
+
+Then, run the end-to-end experiments.
+
+```
+bash run_e2e.sh 0 1 # 0: GPU rank; 1: model id
+bash run_e2e.sh 0 2
+...
+bash run_e2e.sh 0 5
+```
+
+You will see the results in `ELASTICLLM/e2e/scripts/res/res_<model>.txt`.
 
 ## On-device deployment
 

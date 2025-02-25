@@ -5,3 +5,5 @@ ELASTICLLM/imp/
 in_out_ckpts/
 tune_log/
 wandb/
+res/
+ELASTICLLM/Contextual_sparsity/predictors/
