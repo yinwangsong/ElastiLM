@@ -11,6 +11,12 @@ class sparse:
     imp_attn = []
     imp_mlp = []
 
+    GET_HIDDEN_STATES = False
+    LACO = False
+
+class Hidden:
+    hidden_states = []
+
 class contextual:
     predictor = []
     inputs = []

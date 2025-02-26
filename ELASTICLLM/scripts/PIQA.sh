@@ -1,33 +1,33 @@
 prefill_slo=(0.8 0.6 0.4 0.2 0.2)
 decode_slo=(0.9 0.8 0.7 0.6 0.5)
 
-for ((i=0; i<${#prefill_slo[@]}; i++)); do
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama" --mode "LLMPruner" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama" --mode "Lingua2+Contextual" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama" --mode "LayerReduction" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama" --mode "Ours" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama_PIQA.txt"
-done
+# for ((i=0; i<${#prefill_slo[@]}; i++)); do
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama" --mode "LLMPruner" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama" --mode "Lingua2+Contextual" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama" --mode "LayerReduction" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama" --mode "Ours" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama_PIQA.txt"
+# done
 
-for ((i=0; i<${#prefill_slo[@]}; i++)); do
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3" --mode "LLMPruner" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3" --mode "Lingua2+Contextual" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3" --mode "LayerReduction" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3" --mode "Ours" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_PIQA.txt"
-done
+# for ((i=0; i<${#prefill_slo[@]}; i++)); do
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3" --mode "LLMPruner" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3" --mode "Lingua2+Contextual" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3" --mode "LayerReduction" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3" --mode "Ours" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_PIQA.txt"
+# done
 
-for ((i=0; i<${#prefill_slo[@]}; i++)); do
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3-instruct" --mode "LLMPruner" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_instruct_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3-instruct" --mode "Lingua2+Contextual" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_instruct_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3-instruct" --mode "LayerReduction" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_instruct_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3-instruct" --mode "Ours" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_instruct_PIQA.txt"
-done
+# for ((i=0; i<${#prefill_slo[@]}; i++)); do
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3-instruct" --mode "LLMPruner" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_instruct_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3-instruct" --mode "Lingua2+Contextual" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_instruct_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3-instruct" --mode "LayerReduction" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_instruct_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "llama3-instruct" --mode "Ours" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/llama3_instruct_PIQA.txt"
+# done
 
-for ((i=0; i<${#prefill_slo[@]}; i++)); do
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "vicuna" --mode "LLMPruner" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/vicuna_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "vicuna" --mode "Lingua2+Contextual" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/vicuna_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "vicuna" --mode "LayerReduction" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/vicuna_PIQA.txt"
-    CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "vicuna" --mode "Ours" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/vicuna_PIQA.txt"
-done
+# for ((i=0; i<${#prefill_slo[@]}; i++)); do
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "vicuna" --mode "LLMPruner" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/vicuna_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "vicuna" --mode "Lingua2+Contextual" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/vicuna_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "vicuna" --mode "LayerReduction" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/vicuna_PIQA.txt"
+#     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "vicuna" --mode "Ours" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/vicuna_PIQA.txt"
+# done
 
 for ((i=0; i<${#prefill_slo[@]}; i++)); do
     CUDA_VISIBLE_DEVICES=$1 python3 ELASTICLLM/PIQA.py --model "orca3b-mini" --mode "LLMPruner" --prefill_SLO ${prefill_slo[$i]} --decode_SLO ${decode_slo[$i]} --res_save_pth "ELASTICLLM/scripts/res/orcamini_PIQA.txt"

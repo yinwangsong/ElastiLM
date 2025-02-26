@@ -121,7 +121,9 @@ Profiling contextual sparsity.
 ```
 bash ELASTICLLM/Contextual_sparsity/run_c4_mlp.sh 0
 ```
-Advanced layer pruning methods.
+Advanced layer pruning methods. See the following steps.
+
+Preparing for LaCo.
 
 ```
 

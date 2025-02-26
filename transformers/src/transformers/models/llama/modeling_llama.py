@@ -484,7 +484,10 @@ class LlamaAttention(nn.Module):
         cos, sin = self.rotary_emb(value_states, position_ids)
         query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin)
 
-        if past_key_value is not None:
+        import scores
+        if scores.sparse.LACO:
+            pass
+        elif past_key_value is not None:
             # sin and cos are specific to RoPE models; cache_position needed for the static cache
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
             key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
@@ -1202,6 +1205,8 @@ class LlamaModel(LlamaPreTrainedModel):
         all_self_attns = () if output_attentions else None
         next_decoder_cache = None
 
+        if scores.sparse.GET_HIDDEN_STATES:
+            scores.Hidden.hidden_states.append(hidden_states)
         cnt = 0
         for decoder_layer in self.layers:
             cnt += 1
@@ -1234,7 +1239,8 @@ class LlamaModel(LlamaPreTrainedModel):
             # if cnt == 1:
             #     import scores
             #     scores.tester.outputs = hidden_states
-
+            if scores.sparse.GET_HIDDEN_STATES:
+                scores.Hidden.hidden_states.append(hidden_states)
             if use_cache:
                 next_decoder_cache = layer_outputs[2 if output_attentions else 1]
 

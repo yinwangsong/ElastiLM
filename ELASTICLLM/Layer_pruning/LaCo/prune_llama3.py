@@ -40,8 +40,8 @@ set_seed(42)
 # scores.sparse.PRUNE = False
 # scores.sparse.SPARSE = False
 
-model = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
-tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B", torch_dtype=torch.float16).cuda()
+tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
 
 print(model)
 
@@ -173,5 +173,4 @@ for RATIO in ratios:
 
     print(llama_model_copy_to_compress)
     # cpu_models.append(llama_model_copy_to_compress.cpu())
-    llama_model_copy_to_compress = llama_model_copy_to_compress.cpu()
-    torch.save(llama_model_copy_to_compress, "prune_log/LaCo/llama_{}.pt".format(RATIO))
+    torch.save(llama_model_copy_to_compress, "prune_log/LaCo/llama3_{}.pt".format(RATIO))
