@@ -47,8 +47,6 @@ def quant_and_dequant_llama(model, bits=8):
             param.data = quantize_and_dequantize(raw, bits)
 
 
-
-
 def set_seed(seed=42):
     """为所有可能的随机源设置种子以增加可重复性."""
     random.seed(seed)       # Python自带的random库
@@ -1715,6 +1713,7 @@ with open(directory, 'r') as file:
     trace = json.load(file)
 
 num_right = 0
+num_right_old = 0
 
 for entry in tqdm(trace):
     question = entry[0]
@@ -1822,7 +1821,7 @@ for entry in tqdm(trace):
         tokenizer.padding_side = "left"
         tokenizer.pad_token = tokenizer.eos_token
 
-    if dataset == 'ARC_E' or dataset == 'OBQA':
+    if dataset == 'ARC_E' or dataset == 'OBQA' or dataset == 'PIQA' or dataset == 'SCIQ':
         
         if dataset == 'ARC_E':
             SYS_PROMPT = ""
@@ -1855,6 +1854,41 @@ for entry in tqdm(trace):
             LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
             LABELS_NUMBER = ['1', '2', '3', '4', '5', '6', '7', '8']
 
+            if args.refinement != 0.0:
+                SYS_PROMPT = refine_prompt_with_llmlingua2(SYS_PROMPT, args.refinement)
+
+        if dataset == 'PIQA':
+            SYS_PROMPT = ""
+            SYS_PROMPT += "You are a smart assistant that helps human sloving problems. You help them by answering questions.\n"
+            SYS_PROMPT += "Examples: \nQuestion: How to make Strawberry Kiwi Sauce at home. Answer: Boil 1 cup Kiwi (chopped), 1 cup chopped strawberries with 3/4 cup water and 1 cup Olive pits for 30 min., stirring to keep from scorching over med. heat on the stove top."
+            SYS_PROMPT += "\nQuestion: Make organic air freshener. Answer: Mix baking soda and essential oils in a jar, cover with cloth and rubber band."
+            SYS_PROMPT += "\nQuestion: What tools do you need to make a suncatcher? Answer: You need tape, a CD, a printed design, and tape."
+            SYS_PROMPT += "\nQuestion: Baby proof a shopping cart. Answer: Wrap pool noodle around shopping cart bar."
+            SYS_PROMPT += "\nQuestion: How do you eat boiled egg? Answer: Just eat the egg itself."
+
+            QUERY = "Question: {question} "
+            QUERY += "Answer:"
+            LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+            LABELS_NUMBER = ['1', '2', '3', '4', '5', '6', '7', '8']
+
+            if args.refinement != 0.0:
+                SYS_PROMPT = refine_prompt_with_llmlingua2(SYS_PROMPT, args.refinement)
+
+        if dataset == 'SCIQ':
+
+            SYS_PROMPT = ""
+            SYS_PROMPT += "You are a smart assistant that helps human sloving problems. You help them by answering questions.\n"
+            SYS_PROMPT += "Examples: \nQuestion: What type of organism is commonly used in preparation of foods such as cheese and yogurt? Answer: mesophilic organisms."
+            SYS_PROMPT += "\nQuestion: What phenomenon makes global winds blow northeast to southwest or the reverse in the northern hemisphere and northwest to southeast or the reverse in the southern hemisphere? Answer: coriolis effect."
+            SYS_PROMPT += "\nQuestion: What tools do you need to make a suncatcher? Answer: You need tape, a CD, a printed design, and tape."
+            SYS_PROMPT += "\nQuestion: Changes from a less-ordered state to a more-ordered state (such as a liquid to a solid) are always what? Answer: exothermic."
+            SYS_PROMPT += "\nQuestion: What is the least dangerous radioactive decay? Answer: alpha decay."
+
+            QUERY = "Question: {question} "
+            QUERY += "Answer:"
+            LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+            LABELS_NUMBER = ['1', '2', '3', '4', '5', '6', '7', '8']
+            
             if args.refinement != 0.0:
                 SYS_PROMPT = refine_prompt_with_llmlingua2(SYS_PROMPT, args.refinement)
 
@@ -2091,7 +2125,7 @@ for entry in tqdm(trace):
             sumprobs /= torch.sum(generated_mask, dim=1)
             res = torch.argmax(sumprobs.squeeze(), dim=0)
             # print(sumprobs)
-            if LABELS[res] == groundtruth or LABELS_NUMBER[res] == groundtruth:
+            if LABELS[res] == groundtruth or LABELS_NUMBER[res] == groundtruth or res == groundtruth:
                 num_right += 1
 
     if dataset == 'octopus':
@@ -2791,6 +2825,13 @@ for entry in tqdm(trace):
             # print(sumprobs)
             if choices[res] == groundtruth:
                 num_right += 1
+    
+    # if dataset == 'PIQA' or dataset == 'SCIQ':
+    #     if num_right != num_right_old:
+    #         print(dataset)
+    #     else:
+    #         print("no change")
+    # num_right_old = num_right
 
 print(num_right/600)
 
