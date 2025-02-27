@@ -51,12 +51,15 @@ layer_imp = [0 for _ in range(layer_num)]
 
 text1 = get_examples('bookcorpus', tokenizer, 10, seq_len = 64).cuda()
 
-for layer_idx in tqdm(range(layer_num)):
-    with torch.no_grad():
-        out1 = model(text1, labels=text1)
-        # print(out1.logits.shape)
+with torch.no_grad():
+    out1 = model(text1, labels=text1)
 
-        layer_imp[layer_idx] += out1.loss.item()
+for layer_idx in tqdm(range(layer_num)):
+
+    hidden_states1 = scores.Hidden.hidden_states[layer_idx]
+    hidden_states2 = scores.Hidden.hidden_states[layer_idx+1]
+    
+    layer_imp[layer_idx] += 1- torch.cosine_similarity(hidden_states1.squeeze(0).flatten().unsqueeze(0), hidden_states2.squeeze(0).flatten().unsqueeze(0)).item()
 
 print(layer_imp)
 

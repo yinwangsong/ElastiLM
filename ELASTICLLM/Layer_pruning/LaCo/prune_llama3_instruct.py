@@ -40,7 +40,7 @@ set_seed(42)
 # scores.sparse.PRUNE = False
 # scores.sparse.SPARSE = False
 
-model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cpu()
+model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).to('cpu')
 tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
 
 print(model)
@@ -111,26 +111,30 @@ for RATIO in ratios:
             del(model_copy.model.layers[diff_lay])
         return model_copy
 
-    import copy
-    llama_model_copy_to_compress = copy.deepcopy(model)
-
     def cal_last_hidden_sim(model1, model2, tokenizer, sents):
         sim_ls = []
         for s in sents:
             # print(s)
             encoded_inputs = tokenizer(s, return_tensors='pt')
-            encoded_inputs = {k: v.cpu() for k, v in encoded_inputs.items()}
+            encoded_inputs = {k: v.to('cuda:1') for k, v in encoded_inputs.items()}
+            model1 = model1.to('cuda:1')
             with torch.no_grad():
                 outputs1 = model1(**encoded_inputs, output_hidden_states=True)
-            hidden_states1 = outputs1.hidden_states[-1] # (1, seq_len, hidden)
+            hidden_states1 = outputs1.hidden_states[-1].cpu() # (1, seq_len, hidden)
+            encoded_inputs = {k: v.to('cuda:0') for k, v in encoded_inputs.items()}
+            model2 = model2.to('cuda:0')
             # print(hidden_states1)
             with torch.no_grad():
                 outputs2 = model2(**encoded_inputs, output_hidden_states=True)
-            hidden_states2 = outputs2.hidden_states[-1] # (1, seq_len, hidden)
+            hidden_states2 = outputs2.hidden_states[-1].cpu() # (1, seq_len, hidden)
             sim_ls.append(torch.cosine_similarity(hidden_states1.squeeze(0).flatten().unsqueeze(0), hidden_states2.squeeze(0).flatten().unsqueeze(0)))
         sim_ls = [i.item() for i in sim_ls]
         print(sim_ls, np.mean(sim_ls))
         return np.mean(sim_ls)
+
+
+    import copy
+    llama_model_copy_to_compress = copy.deepcopy(model.cpu())
 
     lay = HIGHEST_LAY - MERGE_LAYERS
     last_merge_flag = False
@@ -157,7 +161,7 @@ for RATIO in ratios:
             THRESHOLD -= 0.1
         # print(lay)
         # print('current model layer', len(llama_model_copy_to_compress.model.layers))
-        tmp_merged_model = merge_layers_return_model(llama_model_copy_to_compress, lay, MERGE_LAYERS-1)
+        tmp_merged_model = merge_layers_return_model(llama_model_copy_to_compress.cpu(), lay, MERGE_LAYERS-1)
         # print("merge_layers_return_model done")
         sim_value = cal_last_hidden_sim(model, tmp_merged_model, tokenizer, sents)
         if sim_value > THRESHOLD:

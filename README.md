@@ -127,11 +127,12 @@ Preparing for LaCo.
 
 ```
 CUDA_VISIBLE_DEVICES=0 python3 ELASTICLLM/Layer_pruning/LaCo/prune_llama.py
-CUDA_VISIBLE_DEVICES=0 python3 ELASTICLLM/Layer_pruning/LaCo/prune_llama3.py
+CUDA_VISIBLE_DEVICES=0,1 python3 ELASTICLLM/Layer_pruning/LaCo/prune_llama3.py
 ..
 CUDA_VISIBLE_DEVICES=0 python3 ELASTICLLM/Layer_pruning/LaCo/prune_orcamini.py
 ```
 The pruned models will be located in `prune_log/LaCo/llama_<ratio>.pt`.
+Note that for llama3 and llama3_instruct, we use `two GPUs` since a 45GB A40 cannot provide enough HBM for LaCo pruning.
 
 Preparing for AttnDrop/ShortGPT.
 
