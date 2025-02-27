@@ -172,5 +172,5 @@ for RATIO in ratios:
     llama_model_copy_to_compress.config.num_hidden_layers = len(llama_model_copy_to_compress.model.layers)
 
     print(llama_model_copy_to_compress)
-    # cpu_models.append(llama_model_copy_to_compress.cpu())
+    llama_model_copy_to_compress = llama_model_copy_to_compress.cpu()
     torch.save(llama_model_copy_to_compress, "prune_log/LaCo/orcamini_{}.pt".format(RATIO))

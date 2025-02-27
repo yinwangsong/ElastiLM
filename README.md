@@ -126,7 +126,16 @@ Advanced layer pruning methods. See the following steps.
 Preparing for LaCo.
 
 ```
+CUDA_VISIBLE_DEVICES=0 python3 ELASTICLLM/Layer_pruning/LaCo/prune_llama.py
+CUDA_VISIBLE_DEVICES=0 python3 ELASTICLLM/Layer_pruning/LaCo/prune_llama3.py
+..
+CUDA_VISIBLE_DEVICES=0 python3 ELASTICLLM/Layer_pruning/LaCo/prune_orcamini.py
+```
+The pruned models will be located in `prune_log/LaCo/llama_<ratio>.pt`.
 
+Preparing for AttnDrop/ShortGPT.
+
+```
 ```
 
 ### Experiments on standalone dataset

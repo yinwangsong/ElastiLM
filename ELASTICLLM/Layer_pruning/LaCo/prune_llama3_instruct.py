@@ -40,7 +40,7 @@ set_seed(42)
 # scores.sparse.PRUNE = False
 # scores.sparse.SPARSE = False
 
-model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cuda()
+model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cpu()
 tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
 
 print(model)
@@ -119,7 +119,7 @@ for RATIO in ratios:
         for s in sents:
             # print(s)
             encoded_inputs = tokenizer(s, return_tensors='pt')
-            encoded_inputs = {k: v.cuda() for k, v in encoded_inputs.items()}
+            encoded_inputs = {k: v.cpu() for k, v in encoded_inputs.items()}
             with torch.no_grad():
                 outputs1 = model1(**encoded_inputs, output_hidden_states=True)
             hidden_states1 = outputs1.hidden_states[-1] # (1, seq_len, hidden)
@@ -172,5 +172,5 @@ for RATIO in ratios:
     llama_model_copy_to_compress.config.num_hidden_layers = len(llama_model_copy_to_compress.model.layers)
 
     print(llama_model_copy_to_compress)
-    # cpu_models.append(llama_model_copy_to_compress.cpu())
+    llama_model_copy_to_compress = llama_model_copy_to_compress.cpu()
     torch.save(llama_model_copy_to_compress, "prune_log/LaCo/llama3_instruct_{}.pt".format(RATIO))
