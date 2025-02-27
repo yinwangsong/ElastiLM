@@ -23,7 +23,7 @@ import os
 current_path = os.path.dirname(__file__)
 
 # 获取两级父目录的路径
-parent_path = os.path.abspath(os.path.join(current_path, '../../LLMPruner/'))
+parent_path = os.path.abspath(os.path.join(current_path, '../../../LLMPruner/'))
 
 # 将父目录路径添加到sys.path中
 if parent_path not in sys.path:
@@ -47,9 +47,12 @@ set_seed(42)
 
 scores.sparse.PRUNE = False
 scores.sparse.SPARSE = False
+scores.sparse.GET_HIDDEN_STATES_ATTN = True
 
-model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cuda()
-tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
+model = AutoModelForCausalLM.from_pretrained("pankajmathur/orca_mini_3b", torch_dtype=torch.float16).cuda()
+tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+
+print(model)
 
 layer_num = len(model.model.layers)
 
@@ -57,17 +60,15 @@ layer_imp = [0 for _ in range(layer_num)]
 
 text1 = get_examples('bookcorpus', tokenizer, 10, seq_len = 64).cuda()
 
+with torch.no_grad():
+    out1 = model(text1, labels=text1)
+
 for layer_idx in tqdm(range(layer_num)):
-    for _ in range (layer_num):
-        model.model.layers[_].is_pruned = False
-    model.model.layers[layer_idx].is_pruned = True
 
-    with torch.no_grad():
-
-        out1 = model(text1, labels=text1)
-        # print(out1.logits.shape)
-
-        layer_imp[layer_idx] += out1.loss.item()
+    hidden_states1 = scores.Hidden.hidden_states_attention[layer_idx*2]
+    hidden_states2 = scores.Hidden.hidden_states_attention[layer_idx*2+1]
+    
+    layer_imp[layer_idx] += 1- torch.cosine_similarity(hidden_states1.squeeze(0).flatten().unsqueeze(0), hidden_states2.squeeze(0).flatten().unsqueeze(0)).item()
 
 print(layer_imp)
 
@@ -75,4 +76,4 @@ def sorted_indices(lst):
     return [index for index, value in sorted(enumerate(lst), key=lambda x: x[1])]
 
 print(sorted_indices(layer_imp)) 
-# [26, 13, 25, 23, 8, 21, 12, 19, 15, 24, 10, 22, 17, 9, 11, 28, 14, 18, 20, 3, 7, 4, 16, 6, 5, 29, 27, 30, 2, 31, 1, 0]
+# [22, 23, 24, 18, 20, 19, 21, 17, 16, 3, 25, 14, 4, 15, 5, 6, 9, 13, 10, 12, 7, 8, 0, 11, 1, 2]

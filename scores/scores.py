@@ -12,10 +12,12 @@ class sparse:
     imp_mlp = []
 
     GET_HIDDEN_STATES = False
+    GET_HIDDEN_STATES_ATTN = False
     LACO = False
 
 class Hidden:
     hidden_states = []
+    hidden_states_attention = []
 
 class contextual:
     predictor = []

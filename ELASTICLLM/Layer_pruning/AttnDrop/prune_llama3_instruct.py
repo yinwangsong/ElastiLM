@@ -23,7 +23,7 @@ import os
 current_path = os.path.dirname(__file__)
 
 # 获取两级父目录的路径
-parent_path = os.path.abspath(os.path.join(current_path, '../../LLMPruner/'))
+parent_path = os.path.abspath(os.path.join(current_path, '../../../LLMPruner/'))
 
 # 将父目录路径添加到sys.path中
 if parent_path not in sys.path:
@@ -47,9 +47,12 @@ set_seed(42)
 
 scores.sparse.PRUNE = False
 scores.sparse.SPARSE = False
+scores.sparse.GET_HIDDEN_STATES_ATTN = True
 
-model = AutoModelForCausalLM.from_pretrained("lmsys/vicuna-7b-v1.5", torch_dtype=torch.float16).cuda()
-tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
+model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cuda()
+tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
+
+print(model)
 
 layer_num = len(model.model.layers)
 
@@ -57,17 +60,15 @@ layer_imp = [0 for _ in range(layer_num)]
 
 text1 = get_examples('bookcorpus', tokenizer, 10, seq_len = 64).cuda()
 
+with torch.no_grad():
+    out1 = model(text1, labels=text1)
+
 for layer_idx in tqdm(range(layer_num)):
-    for _ in range (layer_num):
-        model.model.layers[_].is_pruned = False
-    model.model.layers[layer_idx].is_pruned = True
 
-    with torch.no_grad():
-
-        out1 = model(text1, labels=text1)
-        # print(out1.logits.shape)
-
-        layer_imp[layer_idx] += out1.loss.item()
+    hidden_states1 = scores.Hidden.hidden_states_attention[layer_idx*2]
+    hidden_states2 = scores.Hidden.hidden_states_attention[layer_idx*2+1]
+    
+    layer_imp[layer_idx] += 1- torch.cosine_similarity(hidden_states1.squeeze(0).flatten().unsqueeze(0), hidden_states2.squeeze(0).flatten().unsqueeze(0)).item()
 
 print(layer_imp)
 
@@ -75,4 +76,4 @@ def sorted_indices(lst):
     return [index for index, value in sorted(enumerate(lst), key=lambda x: x[1])]
 
 print(sorted_indices(layer_imp)) 
-# [12, 28, 7, 20, 29, 22, 10, 24, 27, 8, 30, 15, 6, 9, 26, 21, 18, 11, 25, 23, 5, 17, 16, 13, 14, 19, 4, 3, 2, 31, 1, 0]
+# [30, 21, 25, 28, 27, 26, 29, 23, 18, 3, 4, 22, 17, 24, 6, 5, 19, 15, 20, 7, 16, 11, 2, 12, 13, 14, 1, 8, 0, 9, 10, 31]

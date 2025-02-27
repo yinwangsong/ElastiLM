@@ -959,6 +959,9 @@ class LlamaDecoderLayer(nn.Module):
         #     import scores
         #     scores.tester.outputs = hidden_states
 
+        import scores
+        if scores.sparse.GET_HIDDEN_STATES_ATTN:
+            scores.Hidden.hidden_states_attention.append(hidden_states)
         # Self Attention
         hidden_states, self_attn_weights, present_key_value = self.self_attn(
             hidden_states=hidden_states,
@@ -969,6 +972,10 @@ class LlamaDecoderLayer(nn.Module):
             use_cache=use_cache,
             cache_position=cache_position,
         )
+        import scores
+        if scores.sparse.GET_HIDDEN_STATES_ATTN:
+            scores.Hidden.hidden_states_attention.append(hidden_states)
+
         hidden_states = residual + hidden_states
 
         # Fully Connected

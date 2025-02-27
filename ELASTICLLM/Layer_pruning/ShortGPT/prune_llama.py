@@ -49,8 +49,8 @@ scores.sparse.PRUNE = False
 scores.sparse.SPARSE = False
 scores.sparse.GET_HIDDEN_STATES = True
 
-model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B", torch_dtype=torch.float16).cuda()
-tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
+model = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
+tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
 
 print(model)
 
