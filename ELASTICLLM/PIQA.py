@@ -1640,6 +1640,322 @@ if args.mode == "LayerReduction":
             else:
                 model.model.layers[i].is_pruned = True
 
+if args.mode == "LaCo":
+
+    prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+    if args.model == "llama":
+        model = torch.load("prune_log/LaCo/llama_{}.pt".format(prune_ratio)).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+    if args.model == "llama3":
+        model = torch.load("prune_log/LaCo/llama3_{}.pt".format(prune_ratio)).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
+    if args.model == "llama3-instruct":
+        model = torch.load("prune_log/LaCo/llama3_instruct_{}.pt".format(prune_ratio)).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
+    if args.model == "vicuna":
+        model = torch.load("prune_log/LaCo/vicuna_{}.pt".format(prune_ratio)).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
+    if args.model == "orca3b-mini":
+        model = torch.load("prune_log/LaCo/orca3b_mini_{}.pt".format(prune_ratio)).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+
+if args.mode == "ShortGPT":
+    if args.model == "llama":
+
+        model = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+
+
+        layer_idx_ranks = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 25, 26, 27, 24, 13, 14, 15, 16, 17, 19, 28, 18, 22, 23, 29, 20, 21, 1, 30, 31, 0, 2]
+    
+        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+
+        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+        for i in range(32):
+            if i in layer_idx_retain:
+                model.model.layers[i].is_pruned = False
+            else:
+                model.model.layers[i].is_pruned = True
+
+    if args.model == "llama3":
+
+        model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B", torch_dtype=torch.float16).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
+
+
+        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 25, 24, 18, 19, 26, 20, 22, 23, 21, 27, 28, 29, 30, 0, 31, 1]
+    
+        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+
+        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+        for i in range(32):
+            if i in layer_idx_retain:
+                model.model.layers[i].is_pruned = False
+            else:
+                model.model.layers[i].is_pruned = True
+
+    if args.model == "llama3-instruct":
+
+        model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
+
+
+        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 17, 18, 19, 22, 20, 27, 21, 28, 29, 30, 0, 31, 1]
+    
+        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+
+        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+        for i in range(32):
+            if i in layer_idx_retain:
+                model.model.layers[i].is_pruned = False
+            else:
+                model.model.layers[i].is_pruned = True
+
+    if args.model == "vicuna":
+
+        model = AutoModelForCausalLM.from_pretrained("lmsys/vicuna-7b-v1.5", torch_dtype=torch.float16).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
+
+
+        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 23, 25, 15, 21, 22, 24, 17, 27, 18, 19, 26, 16, 20, 28, 29, 30, 31, 0, 1]
+    
+        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+
+        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+        for i in range(32):
+            if i in layer_idx_retain:
+                model.model.layers[i].is_pruned = False
+            else:
+                model.model.layers[i].is_pruned = True
+    if args.model == "orca3b-mini":
+
+        model = AutoModelForCausalLM.from_pretrained("pankajmathur/orca_mini_3b", torch_dtype=torch.float16).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+
+
+        layer_idx_ranks = [7, 8, 9, 10, 11, 12, 6, 13, 14, 3, 15, 16, 4, 17, 18, 21, 19, 20, 22, 23, 24, 25, 1, 5, 0, 2]
+    
+        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+
+        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*26):]
+
+        for i in range(26):
+            if i in layer_idx_retain:
+                model.model.layers[i].is_pruned = False
+            else:
+                model.model.layers[i].is_pruned = True
+
+if args.mode == "AttnDrop":
+    if args.model == "llama":
+
+        model = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+
+
+        layer_idx_ranks = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 25, 26, 27, 24, 13, 14, 15, 16, 17, 19, 28, 18, 22, 23, 29, 20, 21, 1, 30, 31, 0, 2]
+        attn_idx_ranks = [3, 30, 4, 23, 25, 21, 20, 29, 5, 28, 19, 6, 18, 17, 7, 26, 24, 27, 12, 22, 15, 16, 10, 11, 9, 13, 8, 14, 31, 0, 2, 1]
+
+        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+
+        flag = False
+        attn_pruned_num_ = 0
+        mlp_pruned_num_ = 0
+        for attn_pruned_num in range(32):
+            for mlp_pruned_num in range(32):
+                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num) / (32*3) ) <= prune_ratio:
+                    attn_pruned_num_ = attn_pruned_num
+                    mlp_pruned_num_ = mlp_pruned_num
+                    flag = True
+                if flag:
+                    break
+            if flag:
+                break
+        
+        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+        for i in range(32):
+            if i in attn_idx_discard:
+                model.model.layers[i].is_attn_pruned = True
+            else:
+                model.model.layers[i].is_attn_pruned = False
+
+        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+        for i in range(32):
+            if i in mlp_idx_discard:
+                model.model.layers[i].is_mlp_pruned = True
+            else:
+                model.model.layers[i].is_mlp_pruned = False
+
+    if args.model == "llama3":
+
+        model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B", torch_dtype=torch.float16).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
+
+
+        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 25, 24, 18, 19, 26, 20, 22, 23, 21, 27, 28, 29, 30, 0, 31, 1]
+        attn_idx_ranks = [21, 30, 25, 28, 26, 29, 27, 23, 18, 22, 17, 4, 3, 24, 19, 20, 15, 5, 6, 2, 16, 11, 7, 13, 14, 8, 12, 9, 31, 10, 1, 0]
+
+        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+
+        flag = False
+        attn_pruned_num_ = 0
+        mlp_pruned_num_ = 0
+        for attn_pruned_num in range(32):
+            for mlp_pruned_num in range(32):
+                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num) / (32*3) ) <= prune_ratio:
+                    attn_pruned_num_ = attn_pruned_num
+                    mlp_pruned_num_ = mlp_pruned_num
+                    flag = True
+                if flag:
+                    break
+            if flag:
+                break
+        
+        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+        for i in range(32):
+            if i in attn_idx_discard:
+                model.model.layers[i].is_attn_pruned = True
+            else:
+                model.model.layers[i].is_attn_pruned = False
+
+        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+        for i in range(32):
+            if i in mlp_idx_discard:
+                model.model.layers[i].is_mlp_pruned = True
+            else:
+                model.model.layers[i].is_mlp_pruned = False
+
+    if args.model == "llama3-instruct":
+
+        model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
+
+
+        layer_idx_ranks = [30, 21, 25, 28, 27, 26, 29, 23, 18, 3, 4, 22, 17, 24, 6, 5, 19, 15, 20, 7, 16, 11, 2, 12, 13, 14, 1, 8, 0, 9, 10, 31]
+        attn_idx_ranks = [30, 21, 25, 28, 27, 26, 29, 23, 18, 3, 4, 22, 17, 24, 6, 5, 19, 15, 20, 7, 16, 11, 2, 12, 13, 14, 1, 8, 0, 9, 10, 31]
+
+        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+
+        flag = False
+        attn_pruned_num_ = 0
+        mlp_pruned_num_ = 0
+        for attn_pruned_num in range(32):
+            for mlp_pruned_num in range(32):
+                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num) / (32*3) ) <= prune_ratio:
+                    attn_pruned_num_ = attn_pruned_num
+                    mlp_pruned_num_ = mlp_pruned_num
+                    flag = True
+                if flag:
+                    break
+            if flag:
+                break
+        
+        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+        for i in range(32):
+            if i in attn_idx_discard:
+                model.model.layers[i].is_attn_pruned = True
+            else:
+                model.model.layers[i].is_attn_pruned = False
+
+        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+        for i in range(32):
+            if i in mlp_idx_discard:
+                model.model.layers[i].is_mlp_pruned = True
+            else:
+                model.model.layers[i].is_mlp_pruned = False
+
+    if args.model == "vicuna":
+
+        model = AutoModelForCausalLM.from_pretrained("lmsys/vicuna-7b-v1.5", torch_dtype=torch.float16).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
+
+
+        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 23, 25, 15, 21, 22, 24, 17, 27, 18, 19, 26, 16, 20, 28, 29, 30, 31, 0, 1]
+        attn_idx_ranks = [22, 3, 20, 2, 26, 4, 18, 16, 5, 24, 27, 28, 30, 6, 29, 21, 13, 10, 15, 19, 8, 7, 12, 23, 25, 9, 14, 11, 17, 31, 0, 1]
+
+        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+
+        flag = False
+        attn_pruned_num_ = 0
+        mlp_pruned_num_ = 0
+        for attn_pruned_num in range(32):
+            for mlp_pruned_num in range(32):
+                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num) / (32*3) ) <= prune_ratio:
+                    attn_pruned_num_ = attn_pruned_num
+                    mlp_pruned_num_ = mlp_pruned_num
+                    flag = True
+                if flag:
+                    break
+            if flag:
+                break
+        
+        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+        for i in range(32):
+            if i in attn_idx_discard:
+                model.model.layers[i].is_attn_pruned = True
+            else:
+                model.model.layers[i].is_attn_pruned = False
+
+        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+        for i in range(32):
+            if i in mlp_idx_discard:
+                model.model.layers[i].is_mlp_pruned = True
+            else:
+                model.model.layers[i].is_mlp_pruned = False
+        
+    if args.model == "orca3b-mini":
+
+        model = AutoModelForCausalLM.from_pretrained("pankajmathur/orca_mini_3b", torch_dtype=torch.float16).cuda()
+        tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+
+
+        layer_idx_ranks = [7, 8, 9, 10, 11, 12, 6, 13, 14, 3, 15, 16, 4, 17, 18, 21, 19, 20, 22, 23, 24, 25, 1, 5, 0, 2]
+        attn_idx_ranks = [22, 23, 24, 18, 20, 19, 21, 17, 16, 3, 25, 14, 4, 15, 5, 6, 9, 13, 10, 12, 7, 8, 0, 11, 1, 2]
+
+        prune_ratio = min(args.prefill_SLO, args.decode_SLO)
+
+        flag = False
+        attn_pruned_num_ = 0
+        mlp_pruned_num_ = 0
+        for attn_pruned_num in range(26):
+            for mlp_pruned_num in range(26):
+                if float( (26-attn_pruned_num + 26*2 - mlp_pruned_num) / (26*3) ) <= prune_ratio:
+                    attn_pruned_num_ = attn_pruned_num
+                    mlp_pruned_num_ = mlp_pruned_num
+                    flag = True
+                if flag:
+                    break
+            if flag:
+                break
+        
+        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+        for i in range(26):
+            if i in attn_idx_discard:
+                model.model.layers[i].is_attn_pruned = True
+            else:
+                model.model.layers[i].is_attn_pruned = False
+
+        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+        for i in range(26):
+            if i in mlp_idx_discard:
+                model.model.layers[i].is_mlp_pruned = True
+            else:
+                model.model.layers[i].is_mlp_pruned = False
+
+
 if args.mode == "Ours":
 
     # currently, only 
