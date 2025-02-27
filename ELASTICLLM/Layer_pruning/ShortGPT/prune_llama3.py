@@ -23,7 +23,7 @@ import os
 current_path = os.path.dirname(__file__)
 
 # 获取两级父目录的路径
-parent_path = os.path.abspath(os.path.join(current_path, '../../LLMPruner/'))
+parent_path = os.path.abspath(os.path.join(current_path, '../../../LLMPruner/'))
 
 # 将父目录路径添加到sys.path中
 if parent_path not in sys.path:
@@ -47,6 +47,7 @@ set_seed(42)
 
 scores.sparse.PRUNE = False
 scores.sparse.SPARSE = False
+scores.sparse.GET_HIDDEN_STATES = True
 
 model = AutoModelForCausalLM.from_pretrained("/data/share/Meta-Llama-3-8B", torch_dtype=torch.float16).cuda()
 tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
@@ -59,17 +60,15 @@ layer_imp = [0 for _ in range(layer_num)]
 
 text1 = get_examples('bookcorpus', tokenizer, 10, seq_len = 64).cuda()
 
+with torch.no_grad():
+    out1 = model(text1, labels=text1)
+
 for layer_idx in tqdm(range(layer_num)):
-    for _ in range (layer_num):
-        model.model.layers[_].is_pruned = False
-    model.model.layers[layer_idx].is_pruned = True
 
-    with torch.no_grad():
-
-        out1 = model(text1, labels=text1)
-        # print(out1.logits.shape)
-
-        layer_imp[layer_idx] += out1.loss.item()
+    hidden_states1 = scores.Hidden.hidden_states[layer_idx]
+    hidden_states2 = scores.Hidden.hidden_states[layer_idx+1]
+    
+    layer_imp[layer_idx] += 1- torch.cosine_similarity(hidden_states1.squeeze(0).flatten().unsqueeze(0), hidden_states2.squeeze(0).flatten().unsqueeze(0)).item()
 
 print(layer_imp)
 
@@ -77,4 +76,4 @@ def sorted_indices(lst):
     return [index for index, value in sorted(enumerate(lst), key=lambda x: x[1])]
 
 print(sorted_indices(layer_imp)) 
-# [8, 26, 24, 23, 9, 12, 25, 19, 22, 13, 17, 21, 11, 10, 14, 20, 4, 15, 28, 6, 3, 18, 7, 16, 5, 27, 29, 2, 30, 31, 1, 0]
+# [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 25, 24, 18, 19, 26, 20, 22, 23, 21, 27, 28, 29, 30, 0, 31, 1]

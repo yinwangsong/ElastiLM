@@ -19,6 +19,15 @@ import os
 import sys
 import os
 
+# 获取当前文件的路径
+current_path = os.path.dirname(__file__)
+
+# 获取两级父目录的路径
+parent_path = os.path.abspath(os.path.join(current_path, '../../../LLMPruner/'))
+
+# 将父目录路径添加到sys.path中
+if parent_path not in sys.path:
+    sys.path.append(parent_path)
 
 from LLMPruner.datasets.example_samples import get_examples
 
@@ -40,8 +49,8 @@ scores.sparse.PRUNE = False
 scores.sparse.SPARSE = False
 scores.sparse.GET_HIDDEN_STATES = True
 
-model = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
-tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+model = AutoModelForCausalLM.from_pretrained("lmsys/vicuna-7b-v1.5", torch_dtype=torch.float16).cuda()
+tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
 
 print(model)
 
@@ -67,4 +76,4 @@ def sorted_indices(lst):
     return [index for index, value in sorted(enumerate(lst), key=lambda x: x[1])]
 
 print(sorted_indices(layer_imp)) 
-# [24, 28, 27, 22, 11, 17, 6, 26, 2, 21, 13, 19, 12, 15, 20, 23, 18, 14, 29, 25, 10, 3, 9, 16, 8, 30, 7, 4, 1, 0, 5, 31]
+# [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 23, 25, 15, 21, 22, 24, 17, 27, 18, 19, 26, 16, 20, 28, 29, 30, 31, 0, 1]
