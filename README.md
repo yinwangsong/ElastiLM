@@ -138,7 +138,9 @@ Preparing for AttnDrop/ShortGPT.
 
 ```
 # AttnDrop
-
+python3 ELASTICLLM/Layer_pruning/AttnDrop/prune_llama.py
+...
+python3 ELASTICLLM/Layer_pruning/AttnDrop/prune_llama3.py
 
 # ShortGPT
 python3 ELASTICLLM/Layer_pruning/ShortGPT/prune_llama.py
@@ -286,6 +288,8 @@ Here is a demo video that is run on device via [Termux](https://play.google.com/
 
 
 ## Artifact evaluation
+
+TODO
 
 ## Coming soon
 

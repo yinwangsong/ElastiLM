@@ -1644,6 +1644,8 @@ if args.mode == "LayerReduction":
 
 if args.mode == "LaCo":
 
+
+    scores.sparse.LACO = True
     prune_ratio = min(args.prefill_SLO, args.decode_SLO)
     if args.model == "llama":
         model = torch.load("prune_log/LaCo/llama_{}.pt".format(prune_ratio)).cuda()
