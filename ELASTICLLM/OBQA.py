@@ -1658,7 +1658,7 @@ if args.mode == "LaCo":
         model = torch.load("prune_log/LaCo/vicuna_{}.pt".format(prune_ratio)).cuda()
         tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
     if args.model == "orca3b-mini":
-        model = torch.load("prune_log/LaCo/orca3b_mini_{}.pt".format(prune_ratio)).cuda()
+        model = torch.load("prune_log/LaCo/orcamini_{}.pt".format(prune_ratio)).cuda()
         tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
 
 if args.mode == "ShortGPT":
@@ -1768,7 +1768,7 @@ if args.mode == "AttnDrop":
         mlp_pruned_num_ = 0
         for attn_pruned_num in range(32):
             for mlp_pruned_num in range(32):
-                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num) / (32*3) ) <= prune_ratio:
+                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
                     attn_pruned_num_ = attn_pruned_num
                     mlp_pruned_num_ = mlp_pruned_num
                     flag = True
@@ -1809,7 +1809,7 @@ if args.mode == "AttnDrop":
         mlp_pruned_num_ = 0
         for attn_pruned_num in range(32):
             for mlp_pruned_num in range(32):
-                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num) / (32*3) ) <= prune_ratio:
+                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
                     attn_pruned_num_ = attn_pruned_num
                     mlp_pruned_num_ = mlp_pruned_num
                     flag = True
@@ -1850,7 +1850,7 @@ if args.mode == "AttnDrop":
         mlp_pruned_num_ = 0
         for attn_pruned_num in range(32):
             for mlp_pruned_num in range(32):
-                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num) / (32*3) ) <= prune_ratio:
+                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
                     attn_pruned_num_ = attn_pruned_num
                     mlp_pruned_num_ = mlp_pruned_num
                     flag = True
@@ -1891,7 +1891,7 @@ if args.mode == "AttnDrop":
         mlp_pruned_num_ = 0
         for attn_pruned_num in range(32):
             for mlp_pruned_num in range(32):
-                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num) / (32*3) ) <= prune_ratio:
+                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
                     attn_pruned_num_ = attn_pruned_num
                     mlp_pruned_num_ = mlp_pruned_num
                     flag = True
@@ -1932,7 +1932,7 @@ if args.mode == "AttnDrop":
         mlp_pruned_num_ = 0
         for attn_pruned_num in range(26):
             for mlp_pruned_num in range(26):
-                if float( (26-attn_pruned_num + 26*2 - mlp_pruned_num) / (26*3) ) <= prune_ratio:
+                if float( (26-attn_pruned_num + 26*2 - mlp_pruned_num*2) / (26*3) ) <= prune_ratio:
                     attn_pruned_num_ = attn_pruned_num
                     mlp_pruned_num_ = mlp_pruned_num
                     flag = True
