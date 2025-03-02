@@ -248,7 +248,7 @@ gdown <file-id>
 
 ### Running
 
-We recommend you using the `adb` tool to connect to the device and run the demo. You can attach your device to the host machine by either the USB or the WiFI.
+We recommend you using the `adb` tool to connect to the device and run the demo. You can attach your device to the host machine by either the USB or the WiFi.
 
 After connection, run
 

@@ -1668,7 +1668,7 @@ if args.mode == "ShortGPT":
 
 
         layer_idx_ranks = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 25, 26, 27, 24, 13, 14, 15, 16, 17, 19, 28, 18, 22, 23, 29, 20, 21, 1, 30, 31, 0, 2]
-    
+
         prune_ratio = min(args.prefill_SLO, args.decode_SLO)
 
         layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
