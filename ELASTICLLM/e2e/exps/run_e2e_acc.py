@@ -1601,7 +1601,7 @@ if args.mode == "LLMPruner":
         tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
         model = reorder_llama3_instruct(model)
 
-if args.mode == "LayerReduction":
+if args.mode == "LayerReduction" or args.mode == "ShortGPT" or args.mode == "AttnDrop":
     if args.model == "llama":
 
         model = AutoModelForCausalLM.from_pretrained("huggyllama/llama-7b", torch_dtype=torch.float16).cuda()
@@ -1629,6 +1629,86 @@ if args.mode == "LayerReduction":
 
         model = AutoModelForCausalLM.from_pretrained("pankajmathur/orca_mini_3b", torch_dtype=torch.float16).cuda()
         tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+
+if args.mode == "LaCo":
+    LaCo_models = []
+
+    for i in [0.2]:
+        if args.model == "llama":
+            model = torch.load("prune_log/LaCo/llama_{}.pt".format(i)).to('cuda:2')
+            tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+        if args.model == "llama3":
+            model = torch.load("prune_log/LaCo/llama3_{}.pt".format(i)).to('cuda:2')
+            tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
+        if args.model == "llama3-instruct":
+            model = torch.load("prune_log/LaCo/llama3_instruct_{}.pt".format(i)).to('cuda:2')
+            tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
+        if args.model == "vicuna":
+            model = torch.load("prune_log/LaCo/vicuna_{}.pt".format(i)).to('cuda:2')
+            tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
+        if args.model == "orca3b-mini":
+            model = torch.load("prune_log/LaCo/orcamini_{}.pt".format(i)).to('cuda:2')
+            tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+        LaCo_models.append(model)
+
+
+    for i in [0.3, 0.4, 0.5, 0.6]:
+        if args.model == "llama":
+            model = torch.load("prune_log/LaCo/llama_{}.pt".format(i)).to('cuda:1')
+            tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+        if args.model == "llama3":
+            model = torch.load("prune_log/LaCo/llama3_{}.pt".format(i)).to('cuda:1')
+            tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
+        if args.model == "llama3-instruct":
+            model = torch.load("prune_log/LaCo/llama3_instruct_{}.pt".format(i)).to('cuda:1')
+            tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
+        if args.model == "vicuna":
+            model = torch.load("prune_log/LaCo/vicuna_{}.pt".format(i)).to('cuda:1')
+            tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
+        if args.model == "orca3b-mini":
+            model = torch.load("prune_log/LaCo/orcamini_{}.pt".format(i)).to('cuda:1')
+            tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+        LaCo_models.append(model)
+
+
+    for i in [0.7, 0.8]:
+        # print(i)
+        if args.model == "llama":
+            model = torch.load("prune_log/LaCo/llama_{}.pt".format(i)).to('cuda:2')
+            tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+        if args.model == "llama3":
+            model = torch.load("prune_log/LaCo/llama3_{}.pt".format(i)).to('cuda:2')
+            tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
+        if args.model == "llama3-instruct":
+            model = torch.load("prune_log/LaCo/llama3_instruct_{}.pt".format(i)).to('cuda:2')
+            tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
+        if args.model == "vicuna":
+            model = torch.load("prune_log/LaCo/vicuna_{}.pt".format(i)).to('cuda:2')
+            tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
+        if args.model == "orca3b-mini":
+            model = torch.load("prune_log/LaCo/orcamini_{}.pt".format(i)).to('cuda:2')
+            tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+        
+        LaCo_models.append(model)
+
+    for i in [0.9, 1.0]:
+        if args.model == "llama":
+            model = torch.load("prune_log/LaCo/llama_{}.pt".format(i)).to('cuda:3')
+            tokenizer = AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+        if args.model == "llama3":
+            model = torch.load("prune_log/LaCo/llama3_{}.pt".format(i)).to('cuda:3')
+            tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B")
+        if args.model == "llama3-instruct":
+            model = torch.load("prune_log/LaCo/llama3_instruct_{}.pt".format(i)).to('cuda:3')
+            tokenizer = AutoTokenizer.from_pretrained("/data/share/Meta-Llama-3-8B-Instruct")
+        if args.model == "vicuna":
+            model = torch.load("prune_log/LaCo/vicuna_{}.pt".format(i)).to('cuda:3')
+            tokenizer = AutoTokenizer.from_pretrained("lmsys/vicuna-7b-v1.5")
+        if args.model == "orca3b-mini":
+            model = torch.load("prune_log/LaCo/orcamini_{}.pt".format(i)).to('cuda:3')
+            tokenizer = AutoTokenizer.from_pretrained("pankajmathur/orca_mini_3b")
+        
+        LaCo_models.append(model)
 
 if args.mode == "Ours":
 
@@ -1701,7 +1781,6 @@ if args.mode == "Ours":
         decision_head_tokenizer = AutoTokenizer.from_pretrained("google/mobilebert-uncased")
         slm = torch.load("ELASTICLLM/train_slm/llama3_instruct/slm_scorehead.pt").cuda()
         # slm = torch.load("ELASTICLLM/train_slm/llama/slm_scorehead.pt").cuda()
-
 
 if args.mode != "Off-The-Shelf":
     tokenizer.padding_side = "left"
@@ -1820,7 +1899,7 @@ for entry in tqdm(trace):
                 tokenizer = tokenizer_350m
         tokenizer.padding_side = "left"
         tokenizer.pad_token = tokenizer.eos_token
-
+    
     if dataset == 'ARC_E' or dataset == 'OBQA' or dataset == 'PIQA' or dataset == 'SCIQ':
         
         if dataset == 'ARC_E':
@@ -1892,7 +1971,7 @@ for entry in tqdm(trace):
             if args.refinement != 0.0:
                 SYS_PROMPT = refine_prompt_with_llmlingua2(SYS_PROMPT, args.refinement)
 
-        model = model.eval()
+
         with torch.no_grad():
             # compress the prompt
             if args.mode == "Ours": 
@@ -2065,6 +2144,273 @@ for entry in tqdm(trace):
                             else:
                                 model.model.layers[i].is_pruned = True
 
+                if args.mode == "LaCo":
+
+                    scores.sparse.LACO = True
+                    prune_ratio = min(prefill_slo, decode_slo)
+                    print(prune_ratio)
+                    model = copy.deepcopy(LaCo_models[int(prune_ratio*10)-2]).to('cuda:0')
+
+                if args.mode == "ShortGPT":
+
+                    if args.model == "llama":
+
+                        layer_idx_ranks = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 25, 26, 27, 24, 13, 14, 15, 16, 17, 19, 28, 18, 22, 23, 29, 20, 21, 1, 30, 31, 0, 2]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "llama3":
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 25, 24, 18, 19, 26, 20, 22, 23, 21, 27, 28, 29, 30, 0, 31, 1]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "llama3-instruct":
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 17, 18, 19, 22, 20, 27, 21, 28, 29, 30, 0, 31, 1]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "vicuna":
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 23, 25, 15, 21, 22, 24, 17, 27, 18, 19, 26, 16, 20, 28, 29, 30, 31, 0, 1]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "orca3b-mini":
+
+                        layer_idx_ranks = [7, 8, 9, 10, 11, 12, 6, 13, 14, 3, 15, 16, 4, 17, 18, 21, 19, 20, 22, 23, 24, 25, 1, 5, 0, 2]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*26):]
+
+                        for i in range(26):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                if args.mode == "AttnDrop":
+                    if args.model == "llama":
+
+                        layer_idx_ranks = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 25, 26, 27, 24, 13, 14, 15, 16, 17, 19, 28, 18, 22, 23, 29, 20, 21, 1, 30, 31, 0, 2]
+                        attn_idx_ranks = [3, 30, 4, 23, 25, 21, 20, 29, 5, 28, 19, 6, 18, 17, 7, 26, 24, 27, 12, 22, 15, 16, 10, 11, 9, 13, 8, 14, 31, 0, 2, 1]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
+                    if args.model == "llama3":
+
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 25, 24, 18, 19, 26, 20, 22, 23, 21, 27, 28, 29, 30, 0, 31, 1]
+                        attn_idx_ranks = [21, 30, 25, 28, 26, 29, 27, 23, 18, 22, 17, 4, 3, 24, 19, 20, 15, 5, 6, 2, 16, 11, 7, 13, 14, 8, 12, 9, 31, 10, 1, 0]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
+                    if args.model == "llama3-instruct":
+
+
+                        layer_idx_ranks = [30, 21, 25, 28, 27, 26, 29, 23, 18, 3, 4, 22, 17, 24, 6, 5, 19, 15, 20, 7, 16, 11, 2, 12, 13, 14, 1, 8, 0, 9, 10, 31]
+                        attn_idx_ranks = [30, 21, 25, 28, 27, 26, 29, 23, 18, 3, 4, 22, 17, 24, 6, 5, 19, 15, 20, 7, 16, 11, 2, 12, 13, 14, 1, 8, 0, 9, 10, 31]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
+                    if args.model == "vicuna":
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 23, 25, 15, 21, 22, 24, 17, 27, 18, 19, 26, 16, 20, 28, 29, 30, 31, 0, 1]
+                        attn_idx_ranks = [22, 3, 20, 2, 26, 4, 18, 16, 5, 24, 27, 28, 30, 6, 29, 21, 13, 10, 15, 19, 8, 7, 12, 23, 25, 9, 14, 11, 17, 31, 0, 1]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+                        
+                    if args.model == "orca3b-mini":
+
+                        layer_idx_ranks = [7, 8, 9, 10, 11, 12, 6, 13, 14, 3, 15, 16, 4, 17, 18, 21, 19, 20, 22, 23, 24, 25, 1, 5, 0, 2]
+                        attn_idx_ranks = [22, 23, 24, 18, 20, 19, 21, 17, 16, 3, 25, 14, 4, 15, 5, 6, 9, 13, 10, 12, 7, 8, 0, 11, 1, 2]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(26):
+                            for mlp_pruned_num in range(26):
+                                if float( (26-attn_pruned_num + 26*2 - mlp_pruned_num*2) / (26*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(26):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(26):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
                 if args.mode == "LLMPruner":
                     prune_ratio = prefill_slo
                     if args.model == "llama":
@@ -2080,7 +2426,7 @@ for entry in tqdm(trace):
 
                 TEMPLATE = SYS_PROMPT + QUERY
             # print(TEMPLATE)
-
+            model = model.eval()
             prompt = TEMPLATE.format(question=question)
             # create answers
             batched_answers = []
@@ -2103,16 +2449,57 @@ for entry in tqdm(trace):
                 return_tensors='pt'
             )
 
-            generated_tokens = generated_ids["input_ids"].cuda()
-            generated_mask = generated_ids["attention_mask"].cuda()
+
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    generated_tokens = generated_ids["input_ids"].to('cuda:0')
+                    generated_mask = generated_ids["attention_mask"].to('cuda:0')
+                elif prune_ratio in [0.7, 0.8]:
+                    generated_tokens = generated_ids["input_ids"].to('cuda:1')
+                    generated_mask = generated_ids["attention_mask"].to('cuda:1')
+                else:
+                    generated_tokens = generated_ids["input_ids"].to('cuda:2')
+                    generated_mask = generated_ids["attention_mask"].to('cuda:2')
+            else:
+                generated_tokens = generated_ids["input_ids"].cuda()
+                generated_mask = generated_ids["attention_mask"].cuda()
             # print(inputs["input_ids"])
-            pred = F.log_softmax(
-                model(
-                    inputs["input_ids"][:, :-1].cuda(), 
-                    attention_mask = inputs["attention_mask"][:, :-1].cuda(),
-                ).logits,
-                dim=-1
-            )
+
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    pred = F.log_softmax(
+                        model(
+                            inputs["input_ids"][:, :-1].to('cuda:0'), 
+                            attention_mask = inputs["attention_mask"][:, :-1].to('cuda:0'),
+                        ).logits,
+                        dim=-1
+                    )
+                elif prune_ratio in [0.7, 0.8]:
+                    pred = F.log_softmax(
+                        model(
+                            inputs["input_ids"][:, :-1].to('cuda:1'), 
+                            attention_mask = inputs["attention_mask"][:, :-1].to('cuda:1'),
+                        ).logits,
+                        dim=-1
+                    )
+                else:
+                    print(prune_ratio)
+                    pred = F.log_softmax(
+                        model(
+                            inputs["input_ids"][:, :-1].to('cuda:2'), 
+                            attention_mask = inputs["attention_mask"][:, :-1].to('cuda:2'),
+                        ).logits,
+                        dim=-1
+                    )
+            else:
+                pred = F.log_softmax(
+                    model(
+                        inputs["input_ids"][:, :-1].cuda(), 
+                        attention_mask = inputs["attention_mask"][:, :-1].cuda(),
+                    ).logits,
+                    dim=-1
+                )
+
             max_generated_len = generated_ids["attention_mask"].shape[-1]
             pred = pred[:, -max_generated_len:, :]
             idx = generated_tokens.unsqueeze(2)
@@ -2157,7 +2544,6 @@ for entry in tqdm(trace):
         if args.refinement != 0.0:
             SYS_PROMPT = refine_prompt_with_llmlingua2(SYS_PROMPT, args.refinement)
 
-        model = model.eval()
         with torch.no_grad():
             # compress the prompt
             if args.mode == "Ours": 
@@ -2340,6 +2726,273 @@ for entry in tqdm(trace):
                             else:
                                 model.model.layers[i].is_pruned = True
 
+                if args.mode == "LaCo":
+
+                    scores.sparse.LACO = True
+                    prune_ratio = min(prefill_slo, decode_slo)
+                    print(prune_ratio)
+                    model = copy.deepcopy(LaCo_models[int(prune_ratio*10)-2]).to('cuda:0')
+
+                if args.mode == "ShortGPT":
+
+                    if args.model == "llama":
+
+                        layer_idx_ranks = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 25, 26, 27, 24, 13, 14, 15, 16, 17, 19, 28, 18, 22, 23, 29, 20, 21, 1, 30, 31, 0, 2]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "llama3":
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 25, 24, 18, 19, 26, 20, 22, 23, 21, 27, 28, 29, 30, 0, 31, 1]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "llama3-instruct":
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 17, 18, 19, 22, 20, 27, 21, 28, 29, 30, 0, 31, 1]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "vicuna":
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 23, 25, 15, 21, 22, 24, 17, 27, 18, 19, 26, 16, 20, 28, 29, 30, 31, 0, 1]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+                    if args.model == "orca3b-mini":
+
+                        layer_idx_ranks = [7, 8, 9, 10, 11, 12, 6, 13, 14, 3, 15, 16, 4, 17, 18, 21, 19, 20, 22, 23, 24, 25, 1, 5, 0, 2]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*26):]
+
+                        for i in range(26):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                if args.mode == "AttnDrop":
+                    if args.model == "llama":
+
+
+                        layer_idx_ranks = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 25, 26, 27, 24, 13, 14, 15, 16, 17, 19, 28, 18, 22, 23, 29, 20, 21, 1, 30, 31, 0, 2]
+                        attn_idx_ranks = [3, 30, 4, 23, 25, 21, 20, 29, 5, 28, 19, 6, 18, 17, 7, 26, 24, 27, 12, 22, 15, 16, 10, 11, 9, 13, 8, 14, 31, 0, 2, 1]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
+                    if args.model == "llama3":
+
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 25, 24, 18, 19, 26, 20, 22, 23, 21, 27, 28, 29, 30, 0, 31, 1]
+                        attn_idx_ranks = [21, 30, 25, 28, 26, 29, 27, 23, 18, 22, 17, 4, 3, 24, 19, 20, 15, 5, 6, 2, 16, 11, 7, 13, 14, 8, 12, 9, 31, 10, 1, 0]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
+                    if args.model == "llama3-instruct":
+
+                        layer_idx_ranks = [30, 21, 25, 28, 27, 26, 29, 23, 18, 3, 4, 22, 17, 24, 6, 5, 19, 15, 20, 7, 16, 11, 2, 12, 13, 14, 1, 8, 0, 9, 10, 31]
+                        attn_idx_ranks = [30, 21, 25, 28, 27, 26, 29, 23, 18, 3, 4, 22, 17, 24, 6, 5, 19, 15, 20, 7, 16, 11, 2, 12, 13, 14, 1, 8, 0, 9, 10, 31]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
+                    if args.model == "vicuna":
+
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 23, 25, 15, 21, 22, 24, 17, 27, 18, 19, 26, 16, 20, 28, 29, 30, 31, 0, 1]
+                        attn_idx_ranks = [22, 3, 20, 2, 26, 4, 18, 16, 5, 24, 27, 28, 30, 6, 29, 21, 13, 10, 15, 19, 8, 7, 12, 23, 25, 9, 14, 11, 17, 31, 0, 1]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+                        
+                    if args.model == "orca3b-mini":
+
+                        layer_idx_ranks = [7, 8, 9, 10, 11, 12, 6, 13, 14, 3, 15, 16, 4, 17, 18, 21, 19, 20, 22, 23, 24, 25, 1, 5, 0, 2]
+                        attn_idx_ranks = [22, 23, 24, 18, 20, 19, 21, 17, 16, 3, 25, 14, 4, 15, 5, 6, 9, 13, 10, 12, 7, 8, 0, 11, 1, 2]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(26):
+                            for mlp_pruned_num in range(26):
+                                if float( (26-attn_pruned_num + 26*2 - mlp_pruned_num*2) / (26*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(26):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(26):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
                 if args.mode == "LLMPruner":
                     prune_ratio = prefill_slo
                     if args.model == "llama":
@@ -2354,7 +3007,7 @@ for entry in tqdm(trace):
                         model = get_llama3_instruct(model, prune_ratio)
 
                 TEMPLATE = SYS_PROMPT + QUERY
-
+            model = model.eval()
             prompt = TEMPLATE.format(question=question)
             
             while len(tokenizer.encode(prompt)) + 1> 1900: # bos token
@@ -2383,19 +3036,46 @@ for entry in tqdm(trace):
                 padding=True,
                 return_tensors='pt'
             )
-            
-            generated_tokens = generated_ids["input_ids"].cuda()
-            generated_mask = generated_ids["attention_mask"].cuda()
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    generated_tokens = generated_ids["input_ids"].to('cuda:0')
+                    generated_mask = generated_ids["attention_mask"].to('cuda:0')
+                elif prune_ratio in [0.7, 0.8]:
+                    generated_tokens = generated_ids["input_ids"].to('cuda:1')
+                    generated_mask = generated_ids["attention_mask"].to('cuda:1')
+                else:
+                    generated_tokens = generated_ids["input_ids"].to('cuda:2')
+                    generated_mask = generated_ids["attention_mask"].to('cuda:2')
+            else:
+                generated_tokens = generated_ids["input_ids"].cuda()
+                generated_mask = generated_ids["attention_mask"].cuda()
 
             # we have to split the batch here due to the annoying OOM
             max_generated_len = generated_ids["attention_mask"].shape[-1]
             pos1 = 5
             pos2 = 10
             pos3 = 15
-            model_logits_batch1 = model(
-                inputs["input_ids"][:pos1, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][:pos1, :-1].cuda(),
-            ).logits
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch1 = model(
+                        inputs["input_ids"][:pos1, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][:pos1, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch1 = model(
+                        inputs["input_ids"][:pos1, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][:pos1, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch1 = model(
+                        inputs["input_ids"][:pos1, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][:pos1, :-1].to('cuda:2'),
+                    ).logits
+            else:
+                model_logits_batch1 = model(
+                    inputs["input_ids"][:pos1, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][:pos1, :-1].cuda(),
+                ).logits
             pred1 = F.log_softmax(
                 model_logits_batch1,
                 dim=-1
@@ -2403,10 +3083,27 @@ for entry in tqdm(trace):
             pred1 = pred1[:, -max_generated_len:, :]
             pred = pred1
 
-            model_logits_batch2 = model(
-                inputs["input_ids"][pos1:pos2, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][pos1:pos2, :-1].cuda(),
-            ).logits
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch2 = model(
+                        inputs["input_ids"][pos1:pos2, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][pos1:pos2, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch2 = model(
+                        inputs["input_ids"][pos1:pos2, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][pos1:pos2, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch2 = model(
+                        inputs["input_ids"][pos1:pos2, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][pos1:pos2, :-1].to('cuda:2'),
+                    ).logits
+            else:
+                model_logits_batch2 = model(
+                    inputs["input_ids"][pos1:pos2, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][pos1:pos2, :-1].cuda(),
+                ).logits
             pred2 = F.log_softmax(
                 model_logits_batch2,
                 dim=-1
@@ -2415,10 +3112,27 @@ for entry in tqdm(trace):
             pred = torch.cat((pred, pred2), dim=0)
             del pred2
 
-            model_logits_batch3 = model(
-                inputs["input_ids"][pos2:pos3, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][pos2:pos3, :-1].cuda(),
-            ).logits
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch3 = model(
+                        inputs["input_ids"][pos2:pos3, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][pos2:pos3, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch3 = model(
+                        inputs["input_ids"][pos2:pos3, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][pos2:pos3, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch3 = model(
+                        inputs["input_ids"][pos2:pos3, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][pos2:pos3, :-1].to('cuda:2'),
+                    ).logits
+            else:
+                model_logits_batch3 = model(
+                    inputs["input_ids"][pos2:pos3, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][pos2:pos3, :-1].cuda(),
+                ).logits
             pred3 = F.log_softmax(
                 model_logits_batch3,
                 dim=-1
@@ -2427,10 +3141,27 @@ for entry in tqdm(trace):
             pred = torch.cat((pred, pred3), dim=0)
             del pred3
 
-            model_logits_batch4 = model(
-                inputs["input_ids"][pos3:, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][pos3:, :-1].cuda(),
-            ).logits
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch4 = model(
+                        inputs["input_ids"][pos3:, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][pos3:, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch4 = model(
+                        inputs["input_ids"][pos3:, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][pos3:, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch4 = model(
+                        inputs["input_ids"][pos3:, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][pos3:, :-1].to('cuda:2'),
+                    ).logits
+            else:
+                model_logits_batch4 = model(
+                    inputs["input_ids"][pos3:, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][pos3:, :-1].cuda(),
+                ).logits
             pred4 = F.log_softmax(
                 model_logits_batch4,
                 dim=-1
@@ -2488,7 +3219,6 @@ for entry in tqdm(trace):
         QUERY = "\nQuestion: {question}"
         QUERY += "Answer:"
 
-        model = model.eval()
         with torch.no_grad():
             # compress the prompt
             if args.mode == "Ours": 
@@ -2672,6 +3402,273 @@ for entry in tqdm(trace):
                             else:
                                 model.model.layers[i].is_pruned = True
 
+                if args.mode == "LaCo":
+
+                    scores.sparse.LACO = True
+                    prune_ratio = min(prefill_slo, decode_slo)
+                    print(prune_ratio)
+                    import copy
+                    model = copy.deepcopy(LaCo_models[int(prune_ratio*10)-2]).to('cuda:0')
+
+                if args.mode == "ShortGPT":
+
+                    if args.model == "llama":
+
+                        layer_idx_ranks = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 25, 26, 27, 24, 13, 14, 15, 16, 17, 19, 28, 18, 22, 23, 29, 20, 21, 1, 30, 31, 0, 2]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "llama3":
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 25, 24, 18, 19, 26, 20, 22, 23, 21, 27, 28, 29, 30, 0, 31, 1]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "llama3-instruct":
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 17, 18, 19, 22, 20, 27, 21, 28, 29, 30, 0, 31, 1]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                    if args.model == "vicuna":
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 23, 25, 15, 21, 22, 24, 17, 27, 18, 19, 26, 16, 20, 28, 29, 30, 31, 0, 1]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*32):]
+
+                        for i in range(32):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+                    if args.model == "orca3b-mini":
+
+                        layer_idx_ranks = [7, 8, 9, 10, 11, 12, 6, 13, 14, 3, 15, 16, 4, 17, 18, 21, 19, 20, 22, 23, 24, 25, 1, 5, 0, 2]
+                    
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        layer_idx_retain = layer_idx_ranks[int(1-float(prune_ratio)*26):]
+
+                        for i in range(26):
+                            if i in layer_idx_retain:
+                                model.model.layers[i].is_pruned = False
+                            else:
+                                model.model.layers[i].is_pruned = True
+
+                if args.mode == "AttnDrop":
+                    if args.model == "llama":
+
+                        layer_idx_ranks = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 25, 26, 27, 24, 13, 14, 15, 16, 17, 19, 28, 18, 22, 23, 29, 20, 21, 1, 30, 31, 0, 2]
+                        attn_idx_ranks = [3, 30, 4, 23, 25, 21, 20, 29, 5, 28, 19, 6, 18, 17, 7, 26, 24, 27, 12, 22, 15, 16, 10, 11, 9, 13, 8, 14, 31, 0, 2, 1]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
+                    if args.model == "llama3":
+
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 25, 24, 18, 19, 26, 20, 22, 23, 21, 27, 28, 29, 30, 0, 31, 1]
+                        attn_idx_ranks = [21, 30, 25, 28, 26, 29, 27, 23, 18, 22, 17, 4, 3, 24, 19, 20, 15, 5, 6, 2, 16, 11, 7, 13, 14, 8, 12, 9, 31, 10, 1, 0]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
+                    if args.model == "llama3-instruct":
+
+                        layer_idx_ranks = [30, 21, 25, 28, 27, 26, 29, 23, 18, 3, 4, 22, 17, 24, 6, 5, 19, 15, 20, 7, 16, 11, 2, 12, 13, 14, 1, 8, 0, 9, 10, 31]
+                        attn_idx_ranks = [30, 21, 25, 28, 27, 26, 29, 23, 18, 3, 4, 22, 17, 24, 6, 5, 19, 15, 20, 7, 16, 11, 2, 12, 13, 14, 1, 8, 0, 9, 10, 31]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
+                    if args.model == "vicuna":
+
+
+                        layer_idx_ranks = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 23, 25, 15, 21, 22, 24, 17, 27, 18, 19, 26, 16, 20, 28, 29, 30, 31, 0, 1]
+                        attn_idx_ranks = [22, 3, 20, 2, 26, 4, 18, 16, 5, 24, 27, 28, 30, 6, 29, 21, 13, 10, 15, 19, 8, 7, 12, 23, 25, 9, 14, 11, 17, 31, 0, 1]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(32):
+                            for mlp_pruned_num in range(32):
+                                if float( (32-attn_pruned_num + 32*2 - mlp_pruned_num*2) / (32*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(32):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(32):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+                        
+                    if args.model == "orca3b-mini":
+
+                        layer_idx_ranks = [7, 8, 9, 10, 11, 12, 6, 13, 14, 3, 15, 16, 4, 17, 18, 21, 19, 20, 22, 23, 24, 25, 1, 5, 0, 2]
+                        attn_idx_ranks = [22, 23, 24, 18, 20, 19, 21, 17, 16, 3, 25, 14, 4, 15, 5, 6, 9, 13, 10, 12, 7, 8, 0, 11, 1, 2]
+
+                        prune_ratio = min(prefill_slo, decode_slo)
+
+                        flag = False
+                        attn_pruned_num_ = 0
+                        mlp_pruned_num_ = 0
+                        for attn_pruned_num in range(26):
+                            for mlp_pruned_num in range(26):
+                                if float( (26-attn_pruned_num + 26*2 - mlp_pruned_num*2) / (26*3) ) <= prune_ratio:
+                                    attn_pruned_num_ = attn_pruned_num
+                                    mlp_pruned_num_ = mlp_pruned_num
+                                    flag = True
+                                if flag:
+                                    break
+                            if flag:
+                                break
+                        
+                        attn_idx_discard = attn_idx_ranks[:attn_pruned_num_]
+
+                        for i in range(26):
+                            if i in attn_idx_discard:
+                                model.model.layers[i].is_attn_pruned = True
+                            else:
+                                model.model.layers[i].is_attn_pruned = False
+
+                        mlp_idx_discard = layer_idx_ranks[:mlp_pruned_num_]
+
+                        for i in range(26):
+                            if i in mlp_idx_discard:
+                                model.model.layers[i].is_mlp_pruned = True
+                            else:
+                                model.model.layers[i].is_mlp_pruned = False
+
                 if args.mode == "LLMPruner":
                     prune_ratio = prefill_slo
                     if args.model == "llama":
@@ -2685,8 +3682,11 @@ for entry in tqdm(trace):
                     if args.model == "llama3-instruct":
                         model = get_llama3_instruct(model, prune_ratio)
 
-                TEMPLATE = SYS_PROMPT + QUERY
+                if args.mode == "LaCo":
+                    model = LaCo_models[int(prune_ratio*10)-2].cuda()
 
+                TEMPLATE = SYS_PROMPT + QUERY
+            model = model.eval()
             prompt = TEMPLATE.format(question=question)
             
             # create answers
@@ -2710,9 +3710,20 @@ for entry in tqdm(trace):
                 padding=True,
                 return_tensors='pt'
             )
-            
-            generated_tokens = generated_ids["input_ids"].cuda()
-            generated_mask = generated_ids["attention_mask"].cuda()
+
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    generated_tokens = generated_ids["input_ids"].to('cuda:0')
+                    generated_mask = generated_ids["attention_mask"].to('cuda:0')
+                elif prune_ratio in [0.7, 0.8]:
+                    generated_tokens = generated_ids["input_ids"].to('cuda:1')
+                    generated_mask = generated_ids["attention_mask"].to('cuda:1')
+                else:
+                    generated_tokens = generated_ids["input_ids"].to('cuda:2')
+                    generated_mask = generated_ids["attention_mask"].to('cuda:2')
+            else:
+                generated_tokens = generated_ids["input_ids"].cuda()
+                generated_mask = generated_ids["attention_mask"].cuda()
 
             # we have to split the batch here due to the annoying OOM
             max_generated_len = generated_ids["attention_mask"].shape[-1]
@@ -2723,10 +3734,27 @@ for entry in tqdm(trace):
             pos4 = 40
             pos5 = 50
             pos6 = 60
-            model_logits_batch1 = model(
-                inputs["input_ids"][:pos1, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][:pos1, :-1].cuda(),
-            ).logits
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch1 = model(
+                        inputs["input_ids"][:pos1, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][:pos1, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch1 = model(
+                        inputs["input_ids"][:pos1, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][:pos1, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch1 = model(
+                        inputs["input_ids"][:pos1, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][:pos1, :-1].to('cuda:2'),
+                    ).logits
+            else:
+                model_logits_batch1 = model(
+                    inputs["input_ids"][:pos1, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][:pos1, :-1].cuda(),
+                ).logits
             pred1 = F.log_softmax(
                 model_logits_batch1,
                 dim=-1
@@ -2736,10 +3764,27 @@ for entry in tqdm(trace):
             del pred1
             del model_logits_batch1
 
-            model_logits_batch2 = model(
-                inputs["input_ids"][pos1:pos2, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][pos1:pos2, :-1].cuda(),
-            ).logits
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch2 = model(
+                        inputs["input_ids"][pos1:pos2, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][pos1:pos2, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch2 = model(
+                        inputs["input_ids"][pos1:pos2, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][pos1:pos2, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch2 = model(
+                        inputs["input_ids"][pos1:pos2, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][pos1:pos2, :-1].to('cuda:2'),
+                    ).logits
+            else:
+                model_logits_batch2 = model(
+                    inputs["input_ids"][pos1:pos2, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][pos1:pos2, :-1].cuda(),
+                ).logits
             pred2 = F.log_softmax(
                 model_logits_batch2,
                 dim=-1
@@ -2749,10 +3794,27 @@ for entry in tqdm(trace):
             pred = torch.cat((pred, pred2), dim=0)
             del pred2
 
-            model_logits_batch3 = model(
-                inputs["input_ids"][pos2:pos3, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][pos2:pos3, :-1].cuda(),
-            ).logits
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch3 = model(
+                        inputs["input_ids"][pos2:pos3, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][pos2:pos3, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch3 = model(
+                        inputs["input_ids"][pos2:pos3, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][pos2:pos3, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch3 = model(
+                        inputs["input_ids"][pos2:pos3, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][pos2:pos3, :-1].to('cuda:2'),
+                    ).logits
+            else:
+                model_logits_batch3 = model(
+                    inputs["input_ids"][pos2:pos3, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][pos2:pos3, :-1].cuda(),
+                ).logits
             pred3 = F.log_softmax(
                 model_logits_batch3,
                 dim=-1
@@ -2761,10 +3823,27 @@ for entry in tqdm(trace):
             pred = torch.cat((pred, pred3), dim=0)
             del pred3
 
-            model_logits_batch4 = model(
-                inputs["input_ids"][pos3:pos4, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][pos3:pos4, :-1].cuda(),
-            ).logits
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch4 = model(
+                        inputs["input_ids"][pos3:pos4, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][pos3:pos4, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch4 = model(
+                        inputs["input_ids"][pos3:pos4, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][pos3:pos4, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch4 = model(
+                        inputs["input_ids"][pos3:pos4, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][pos3:pos4, :-1].to('cuda:2'),
+                    ).logits 
+            else:
+                model_logits_batch4 = model(
+                    inputs["input_ids"][pos3:pos4, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][pos3:pos4, :-1].cuda(),
+                ).logits
             pred4 = F.log_softmax(
                 model_logits_batch4,
                 dim=-1
@@ -2773,10 +3852,28 @@ for entry in tqdm(trace):
             pred = torch.cat((pred, pred4), dim=0)
             del pred4
 
-            model_logits_batch5 = model(
-                inputs["input_ids"][pos4:pos5, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][pos4:pos5, :-1].cuda(),
-            ).logits
+
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch5 = model(
+                        inputs["input_ids"][pos4:pos5, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][pos4:pos5, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch5 = model(
+                        inputs["input_ids"][pos4:pos5, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][pos4:pos5, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch5 = model(
+                        inputs["input_ids"][pos4:pos5, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][pos4:pos5, :-1].to('cuda:2'),
+                    ).logits
+            else:
+                model_logits_batch5 = model(
+                    inputs["input_ids"][pos4:pos5, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][pos4:pos5, :-1].cuda(),
+                ).logits
             pred5 = F.log_softmax(
                 model_logits_batch5,
                 dim=-1
@@ -2785,10 +3882,27 @@ for entry in tqdm(trace):
             pred = torch.cat((pred, pred5), dim=0)
             del pred5
 
-            model_logits_batch6 = model(
-                inputs["input_ids"][pos5:pos6, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][pos5:pos6, :-1].cuda(),
-            ).logits
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch6 = model(
+                        inputs["input_ids"][pos5:pos6, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][pos5:pos6, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch6 = model(
+                        inputs["input_ids"][pos5:pos6, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][pos5:pos6, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch6 = model(
+                        inputs["input_ids"][pos5:pos6, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][pos5:pos6, :-1].to('cuda:2'),
+                    ).logits
+            else:
+                model_logits_batch6 = model(
+                    inputs["input_ids"][pos5:pos6, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][pos5:pos6, :-1].cuda(),
+                ).logits
             pred6 = F.log_softmax(
                 model_logits_batch6,
                 dim=-1
@@ -2797,10 +3911,27 @@ for entry in tqdm(trace):
             pred = torch.cat((pred, pred6), dim=0)
             del pred6
 
-            model_logits_batch7 = model(
-                inputs["input_ids"][pos6:, :-1].cuda(), 
-                attention_mask = inputs["attention_mask"][pos6:, :-1].cuda(),
-            ).logits
+            if args.mode == "LaCo-abandoned":
+                if prune_ratio in [0.6]:
+                    model_logits_batch7 = model(
+                        inputs["input_ids"][pos6:, :-1].to('cuda:0'), 
+                        attention_mask = inputs["attention_mask"][pos6:, :-1].to('cuda:0'),
+                    ).logits
+                elif prune_ratio in [0.7, 0.8]:
+                    model_logits_batch7 = model(
+                        inputs["input_ids"][pos6:, :-1].to('cuda:1'), 
+                        attention_mask = inputs["attention_mask"][pos6:, :-1].to('cuda:1'),
+                    ).logits
+                else:
+                    model_logits_batch7 = model(
+                        inputs["input_ids"][pos6:, :-1].to('cuda:2'), 
+                        attention_mask = inputs["attention_mask"][pos6:, :-1].to('cuda:2'),
+                    ).logits
+            else:
+                model_logits_batch7 = model(
+                    inputs["input_ids"][pos6:, :-1].cuda(), 
+                    attention_mask = inputs["attention_mask"][pos6:, :-1].cuda(),
+                ).logits
             pred7 = F.log_softmax(
                 model_logits_batch7,
                 dim=-1
@@ -2832,6 +3963,12 @@ for entry in tqdm(trace):
     #     else:
     #         print("no change")
     # num_right_old = num_right
+
+    if args.mode == "LaCo":
+        del model
+        torch.cuda.empty_cache()
+        import gc
+        gc.collect()
 
 print(num_right/600)
 

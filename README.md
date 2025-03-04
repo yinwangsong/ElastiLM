@@ -164,6 +164,15 @@ bash ELASTICLLM/scripts/ARC_E.sh 0
 ```
 . You will see the results under `ELASTICLLM/scripts/res/<model>_<dataset>.txt`
 
+Here is an exmaple of `llama_ARC_E.txt`.
+
+```
+ARC_E llama LLMPruner 0.8 0.9 0.5228070175438596
+ARC_E llama Lingua2+Contextual 0.8 0.9 0.5017543859649123
+ARC_E llama LayerReduction 0.8 0.9 0.43157894736842106
+...
+```
+The results of `Off-the-shelf` baseline is located in `ELASTICLLM/scripts/res/<dataset>.txt`.
 
 ### Experiments on end-to-end traces
 
@@ -179,13 +188,24 @@ The number (e.g., `0`) means the skewness of the trace.
 Then, run the end-to-end experiments.
 
 ```
-bash ELASTICLLM/e2e/scripts/run_e2e.sh 0 1 # 0: GPU rank; 1: model id
-bash ELASTICLLM/e2e/scripts/run_e2e.sh 0 2
+bash ELASTICLLM/e2e/scripts/run_e2e.sh 0 1 2 3 1 # 0 1 2 3: GPU ranks; 1: model id
+bash ELASTICLLM/e2e/scripts/run_e2e.sh 0 1 2 3 2
 ...
-bash ELASTICLLM/e2e/scripts/run_e2e.sh 0 5
+bash ELASTICLLM/e2e/scripts/run_e2e.sh 0 1 2 3 5
 ```
 
+> ⚠️ Note that the `LaCo` baseline requires multiple GPUs (i.e., 4x 45GB A40 in the default setting). 
+
 You will see the results in `ELASTICLLM/e2e/scripts/res/res_<model>.txt`.
+
+Here is an exmaple of `res_llama.txt`.
+
+```
+alpha=0 llama Ours 0.46
+alpha=0 llama LayerReduction 0.285
+alpha=0 llama Lingua2+Contextual 0.3933333333333333
+...
+```
 
 ## On-device deployment
 
