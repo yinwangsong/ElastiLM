@@ -8,7 +8,8 @@ wandb/
 res/
 ELASTICLLM/Contextual_sparsity/predictors/
 
-
+ablation/
+Drawing/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
