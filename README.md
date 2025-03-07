@@ -47,7 +47,7 @@ numpy==1.26.4
 tqdm==4.66.4
 wandb==0.17.0
 ```
-. For detailed information, we recommend you directly using the [docker image](), or checking the software inside it and installing them manually.
+. For detailed information, we recommend you directly using the [docker image](https://hub.docker.com/r/yinwangsong2000/elastilm_ae), or checking the software inside it and installing them manually.
 
 ElastiLM is built atop several third-party libs, which are modified significantly by us from their original source code. You need to install some of them by
 ```
@@ -243,7 +243,7 @@ GNU Make 4.3
 Android NDK r26c
 ```
 
-. For detailed information, we recommend you directly using the [docker image](), or checking the software inside it and installing them manually.
+. For detailed information, we recommend you directly using the [docker image](https://hub.docker.com/r/yinwangsong2000/elastilm_ae), or checking the software inside it and installing them manually.
 
 ### Compiling
 
@@ -309,7 +309,7 @@ Here is a demo video that is run on device via [Termux](https://play.google.com/
 
 ## Artifact evaluation
 
-TODO
+See assets/ElastiLM_ae.pdf.
 
 ## Coming soon
 
