@@ -214,7 +214,7 @@ We provide an on-device deployment demo of ElastiLM.
 ### Hardware/software environment
 
 The demo is runnable on ARM platforms with SIMD Extention (i.e., NEON) and half precision (i.e., FP16) support.
-Currently we demonstrate the elasity by `TTFT (Time-To-First Token)` and `TPOT (Time-Per-Output-Token)`measured by `std::chrono::system_clock::now()`.
+Currently we demonstrate the elasticity by `TTFT (Time-To-First Token)` and `TPOT (Time-Per-Output-Token)`measured by `std::chrono::system_clock::now()`.
 You can also root your device to monitor the advanced information like energy.
 
 In the following parts, we use a MI14 smartphone by default. The specification is listed below.
