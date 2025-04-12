@@ -172,7 +172,7 @@ ARC_E llama Lingua2+Contextual 0.8 0.9 0.5017543859649123
 ARC_E llama LayerReduction 0.8 0.9 0.43157894736842106
 ...
 ```
-The results of `Off-the-shelf` baseline is located in `ELASTICLLM/scripts/res/<dataset>.txt`.
+The results of `Off-the-shelf` baseline are located in `ELASTICLLM/scripts/res/<dataset>.txt`.
 
 ### Experiments on end-to-end traces
 
