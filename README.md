@@ -1,4 +1,4 @@
-Code for \[TBD'25\] Elastic On-Device LLM Service.
+Code for \[MobiCom'25\] Elastic On-Device LLM for OS Service.
 
 ## Project structure
 
