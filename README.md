@@ -1,4 +1,4 @@
-Code for \[MobiCom'25\] Elastic On-Device LLM for OS Service.
+Code for \[MobiCom'25\] Elastic On-Device LLM Service.
 
 ## Project structure
 
